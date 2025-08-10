@@ -1,185 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Conquête Incremental – Menu</title>
-<link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conquête - Menu</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="topbar">
-  <h1>Conquête Incremental</h1>
-  <nav>
-    <button class="btn link" data-view="menu">Menu</button>
-    <button class="btn link" data-view="solo">Solo</button>
-    <button class="btn link" data-view="versus">Versus Online</button>
-    <button class="btn link" data-view="settings">Paramètres</button>
-  </nav>
-</header>
 
-<main id="app" class="container">
-  <!-- MENU VIEW -->
-  <section id="view-menu" class="view active">
-    <div class="menu-card">
-      <h2>Modes de jeu</h2>
-      <div class="menu-grid">
-        <div class="menu-item">
-          <h3>Solo</h3>
-          <p>Affronte une IA simple. Économie par tours (paysans 🌾, fantassins 🛡️).</p>
-          <button class="btn primary" data-view="solo">Lancer</button>
-        </div>
-        <div class="menu-item">
-          <h3>Versus Online</h3>
-          <p>Crée une salle (code 4 chiffres) ou rejoins celle d’un ami.</p>
-          <button class="btn primary" data-view="versus">Jouer en ligne</button>
-        </div>
-        <div class="menu-item">
-          <h3>Paramètres</h3>
-          <p>Taille de la grille, probabilités, etc. (sauvegardés localement)</p>
-          <button class="btn" data-view="settings">Ouvrir</button>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- Menu principal -->
+<div id="menu-screen" class="screen active">
+  <h1>Conquête</h1>
+  <div class="menu-buttons">
+    <button id="btn-solo">Solo</button>
+    <button id="btn-versus">Versus Online</button>
+    <button id="btn-settings">Paramètres</button>
+  </div>
+</div>
 
-  <!-- SOLO VIEW -->
-  <section id="view-solo" class="view">
-    <div class="panel-row">
-      <div class="left">
-        <div class="panel">
-          <div class="row top">
-            <div class="stat" id="s-gold">Or: 1</div>
-            <div class="stat" id="s-income">Revenu/tour: 0</div>
-            <div class="stat" id="s-turn">Tour: 0</div>
-            <div class="stat" id="s-role">Solo</div>
-          </div>
-          <div class="row">
-            <div class="muted">Grille: <span id="s-grid">10×10</span></div>
-          </div>
-          <div id="s-board" class="board"></div>
-          <div class="small muted" style="margin-top:8px">🏰 Toi (droite) • 🏯 IA (gauche)</div>
-        </div>
-      </div>
-      <div class="right">
-        <div class="panel">
-          <h3>Phase d’achats</h3>
-          <div class="row">
-            <button class="btn" id="s-buyP">Acheter paysan (1 or)</button>
-            <span class="small muted" id="s-pCount">0 paysan</span>
-          </div>
-          <div class="muted small" style="margin:8px 0 6px">Champs (capacité <span id="s-farmCap">30</span>)</div>
-          <div id="s-farms" class="farm-grid"></div>
-        </div>
+<!-- Écran solo -->
+<div id="solo-screen" class="screen">
+  <h2>Mode Solo</h2>
+  <button onclick="showScreen('menu-screen')">Retour Menu</button>
+</div>
 
-        <div class="panel">
-          <h3>Armée (option)</h3>
-          <div class="row">
-            <button class="btn" id="s-buyF">Acheter fantassin (10 or)</button>
-            <span class="small muted" id="s-fCount">0 fantassin</span>
-          </div>
-          <div class="small muted">Proba capture: neutre <span id="s-pN">65%</span> • vs ennemi <span id="s-pE">40%</span></div>
-        </div>
+<!-- Écran versus -->
+<div id="versus-screen" class="screen">
+  <h2>Versus Online</h2>
+  <button onclick="showScreen('menu-screen')">Retour Menu</button>
+</div>
 
-        <div class="panel">
-          <h3>Tour</h3>
-          <div class="row">
-            <button class="btn primary" id="s-step">⏭ Fin de mon tour</button>
-            <button class="btn" id="s-reset">⟲ Reset</button>
-          </div>
-          <div id="s-log" class="log">—</div>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- Écran paramètres -->
+<div id="settings-screen" class="screen">
+  <h2>Paramètres</h2>
+  <button onclick="showScreen('menu-screen')">Retour Menu</button>
+</div>
 
-  <!-- VERSUS VIEW -->
-  <section id="view-versus" class="view">
-    <div class="panel-row">
-      <div class="left">
-        <div class="panel">
-          <div class="row top">
-            <div class="stat" id="v-gold">Or: 1</div>
-            <div class="stat" id="v-income">Revenu/tour: 0</div>
-            <div class="stat" id="v-turn">Tour: 0</div>
-            <div class="stat" id="v-role">Solo</div>
-          </div>
-          <div class="row">
-            <div class="muted">Grille: <span id="v-grid">10×10</span></div>
-          </div>
-          <div id="v-board" class="board"></div>
-          <div class="small muted" style="margin-top:8px">🏰 J1 (droite) • 🏯 J2 (gauche)</div>
-        </div>
-      </div>
-      <div class="right">
-        <div class="panel">
-          <h3>Versus Online</h3>
-          <div class="row">
-            <button class="btn" id="v-create">Créer</button>
-            <input class="btn" id="v-room" placeholder="Code 4 chiffres" maxlength="4" />
-            <button class="btn" id="v-join">Rejoindre</button>
-          </div>
-          <div class="small muted" id="v-roomInfo">Hors ligne</div>
-          <div class="small warn" id="v-fbWarn">⚠️ Place ton fichier <b>firebase-config.js</b> à la racine (copie l’exemple).</div>
-        </div>
-
-        <div class="panel">
-          <h3>Phase d’achats</h3>
-          <div class="row">
-            <button class="btn" id="v-buyP">Acheter paysan (1 or)</button>
-            <span class="small muted" id="v-pCount">0 paysan</span>
-          </div>
-          <div class="muted small" style="margin:8px 0 6px">Champs (capacité <span id="v-farmCap">30</span>)</div>
-          <div id="v-farms" class="farm-grid"></div>
-        </div>
-
-        <div class="panel">
-          <h3>Armée (option)</h3>
-          <div class="row">
-            <button class="btn" id="v-buyF">Acheter fantassin (10 or)</button>
-            <span class="small muted" id="v-fCount">0 fantassin</span>
-          </div>
-          <div class="small muted">Tours alternés. Proba capture: neutre 65% • vs 40%</div>
-        </div>
-
-        <div class="panel">
-          <h3>Tour</h3>
-          <div class="row">
-            <button class="btn primary" id="v-step">⏭ Fin du tour</button>
-            <button class="btn" id="v-reset">⟲ Reset</button>
-          </div>
-          <div id="v-log" class="log">—</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SETTINGS VIEW -->
-  <section id="view-settings" class="view">
-    <div class="panel settings">
-      <h2>Paramètres</h2>
-      <div class="grid-2">
-        <label>Taille de la grille
-          <input id="opt-size" type="number" min="7" max="25" value="10" class="btn" />
-        </label>
-        <label>Proba capture (neutre)
-          <input id="opt-pN" type="number" min="0.3" max="0.95" step="0.05" value="0.65" class="btn" />
-        </label>
-        <label>Proba victoire (vs joueur/IA)
-          <input id="opt-pE" type="number" min="0.2" max="0.9" step="0.05" value="0.40" class="btn" />
-        </label>
-        <label>Capacité de champs
-          <input id="opt-farmCap" type="number" min="6" max="60" step="6" value="30" class="btn" />
-        </label>
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="opt-save">💾 Sauvegarder</button>
-        <button class="btn" id="opt-reset">Reset par défaut</button>
-      </div>
-      <p class="small muted">Ces paramètres s’appliquent aux nouveaux resets / rooms. Ils sont stockés dans ton navigateur.</p>
-    </div>
-  </section>
-</main>
-
-<script type="module" src="app.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
