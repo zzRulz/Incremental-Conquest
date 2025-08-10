@@ -1,17 +1,26 @@
-# Incremental 1v1 – Firebase (frontend only)
+# Conquête Incremental – SPA (Menu Solo / Versus / Paramètres)
 
-Ce dossier contient une version **multijoueur** (1v1) de ton incremental, qui fonctionne **uniquement côté front** grâce à **Firebase Realtime Database**.
+Cette version regroupe tout dans **un site** avec un **menu d’accueil** :
+- **Solo** : partie contre une **IA simple** (économie par tours).
+- **Versus Online** : création / rejoint d’une salle via **code à 4 chiffres** (Firebase RTDB).
+- **Paramètres** : taille de la grille, proba, capacité de champs. Sauvegardés en local.
 
-## Principe
-- J1 clique **Créer** → un **code 4 chiffres** est généré.
-- J2 clique **Rejoindre** et saisit le code → la partie commence.
-- Tours **alternés** : J1 puis J2.
-- Chacun a son **or**, ses **paysans** et **fantassins**. La **grille** est partagée.
+## Fichiers
+- `index.html` — les 3 vues (SPA)
+- `styles.css` — styles
+- `app.js` — logique Solo / Versus / Settings
+- `firebase-config.sample.js` — exemple de config Firebase (à copier en `firebase-config.js` si tu veux le online)
 
-## Mise en place Firebase (10 minutes)
-1. Va sur [console.firebase.google.com](https://console.firebase.google.com) → **Create project**.
-2. Dans le projet : **Build → Realtime Database** → **Create Database** (emplacement `europe-west1` conseillé).
-3. **Rules** (règles de sécurité) → colle ceci :
+## Déploiement GitHub Pages
+- Mets ces fichiers **à la racine** du dépôt.
+- Si tu veux activer **Versus Online**, ajoute **aussi** `firebase-config.js` (non fourni ici) avec tes clés Firebase.
+
+## Firebase (optionnel, pour Versus)
+- Crée un projet, active **Realtime Database**, copie la **config Web** → colle-la dans `firebase-config.js` :
+```js
+export const firebaseConfig = { /* clés */ };
+```
+- Règles minimalistes (prototypage) :
 ```json
 {
   "rules": {
@@ -25,29 +34,5 @@ Ce dossier contient une version **multijoueur** (1v1) de ton incremental, qui fo
   }
 }
 ```
-> Pour un proto public, ces règles suffisent. Pour de la prod, on mettrait de l’auth + quotas.
 
-4. **Project settings → Your apps → Web app** → **Register app**.
-5. Copie la **configuration SDK** (objet `firebaseConfig`).
-6. Dans ce dossier, renomme `firebase-config.sample.js` en **`firebase-config.js`** et colle ta config :
-```js
-export const firebaseConfig = { /* ... tes clés ... */ };
-```
-
-## Lancer en local
-- Ouvre `index.html` **depuis un serveur local** (sinon certains navigateurs bloquent les modules) :
-```bash
-python -m http.server 8000
-# puis http://localhost:8000
-```
-
-## Déployer sur GitHub Pages
-- Mets **tous les fichiers à la racine** du dépôt, **y compris** `firebase-config.js`.
-- Active Pages (Settings → Pages → Deploy from a branch → main / root).
-
-## Personnalisation
-- Le code de salle est un **random 4 chiffres**. Tu peux ajouter un bouton “copier”.
-- Les règles Realtime Database peuvent être durcies pour limiter l’écriture à 1 salle / IP / minute, etc.
-- Si tu préfères **Supabase** (Postgres + Realtime), c’est possible aussi.
-
-Bon dev & bon jeu !
+Bon jeu !

@@ -1,5 +1,4 @@
-// Remplace ce fichier par ta vraie config Firebase et renomme-le firebase-config.js
-// -> Console Firebase: Paramètres du projet -> Vos applications -> SDK configuration
+// Copie ce fichier en firebase-config.js et remplace par ta vraie config (Console Firebase > Project settings > SDK setup)
 export const firebaseConfig = {
   apiKey: "PASTE_API_KEY",
   authDomain: "PASTE_PROJECT.firebaseapp.com",
