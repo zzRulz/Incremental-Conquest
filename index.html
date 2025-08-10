@@ -7,14 +7,127 @@
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="center-screen">
-  <h1>Conquête</h1>
-  <div class="menu-col">
-    <a class="btn primary" href="solo.html">Solo</a>
-    <a class="btn" href="versus.html">Versus Online</a>
-    <a class="btn" href="settings.html">Paramètres</a>
+<div class="center">
+  <div class="hero">
+    <canvas id="castle" width="560" height="160" aria-label="Animation châteaux"></canvas>
+    <h1 class="title">Conquête</h1>
   </div>
-  <div class="small muted">v1 multipage • héberge sur GitHub Pages</div>
+
+  <div id="menu" class="menu">
+    <button id="playBtn" class="btn primary">Play</button>
+    <button id="settingsBtn" class="btn">Settings</button>
+    <div class="small">vMenu minimal — Play charge votre jeu (ex: <code>versus.html</code>)</div>
+  </div>
+
+  <div id="settingsPanel" class="panel hidden">
+    <h2>Settings</h2>
+    <div class="section">
+      <div class="row"><label style="min-width:110px">Musique</label><input id="musicRange" class="slider" type="range" min="0" max="100" step="1"></div>
+      <div class="row"><label style="min-width:110px">SFX</label><input id="sfxRange" class="slider" type="range" min="0" max="100" step="1"></div>
+    </div>
+    <div class="section">
+      <h3 style="margin:8px 0 0 0">Graphismes (juste pour le fun 😄)</h3>
+      <div class="options">
+        <label class="radio"><input type="radio" name="gfx" value="patatos"><span>Patatos</span></label>
+        <label class="radio"><input type="radio" name="gfx" value="rtx"><span>RTX ON</span></label>
+      </div>
+    </div>
+    <div class="back">
+      <button id="backBtn" class="btn">Retour</button>
+    </div>
+    <div class="small">Astuces : ces options sont stockées localement et lues par vos pages de jeu.</div>
+  </div>
 </div>
+
+<script src="settings.js"></script>
+<script>
+// ===== Menu logic (show/hide settings) =====
+const menu = document.getElementById('menu');
+const settingsPanel = document.getElementById('settingsPanel');
+document.getElementById('settingsBtn').addEventListener('click', ()=>{ menu.classList.add('hidden'); settingsPanel.classList.remove('hidden'); SettingsUI.load(); });
+document.getElementById('backBtn').addEventListener('click', ()=>{ settingsPanel.classList.add('hidden'); menu.classList.remove('hidden'); });
+
+// Play navigates to your main game page (change target if needed)
+document.getElementById('playBtn').addEventListener('click', ()=>{
+  // Change this to your real game entry page (e.g., 'versus.html' or 'solo.html')
+  const target = 'versus.html'; // change if needed
+  window.location.href = target;
+});
+
+// ===== Infinite alternating castles animation =====
+(function(){
+  const cv = document.getElementById('castle');
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height, groundY=H-24;
+  const left = { x: 40, y: groundY-54, w:66, h:54 };
+  const right= { x: W-106, y: groundY-54, w:66, h:54 };
+  const G = 0.12;
+  let turn='L', phase='idle', boomR=0, boomL=0;
+  const delayFrames = 60; // 1 sec @60fps
+  let delay=30;
+  let proj = { x:0,y:0,vx:0,vy:0,active:false };
+
+  function drawGround(){
+    ctx.strokeStyle='#2b3448'; ctx.beginPath(); ctx.moveTo(0,groundY); ctx.lineTo(W,groundY); ctx.stroke();
+  }
+  function drawCastle(c, side){
+    ctx.fillStyle = side==='L' ? '#2f4d3d' : '#5a2e2e'; ctx.fillRect(c.x,c.y,c.w,c.h);
+    ctx.fillStyle = '#cfd7df';
+    const teeth=4, tw=c.w/teeth, th=8;
+    for(let i=0;i<teeth;i++) ctx.fillRect(c.x+i*tw+2, c.y-10, tw-4, th);
+    ctx.strokeStyle='#cfd7df'; ctx.lineWidth=2; ctx.beginPath();
+    ctx.moveTo(c.x+c.w/2, c.y-18); ctx.lineTo(c.x+c.w/2, c.y-34); ctx.stroke();
+    ctx.fillStyle = side==='L' ? '#7cfe9a' : '#ff7a7a';
+    ctx.beginPath(); ctx.moveTo(c.x+c.w/2, c.y-34);
+    ctx.lineTo(c.x+c.w/2+14, c.y-28); ctx.lineTo(c.x+c.w/2, c.y-22); ctx.closePath(); ctx.fill();
+  }
+  function explosion(cx,cy,amp){
+    for(let r=0;r<3;r++){
+      ctx.beginPath(); ctx.arc(cx, cy, amp - r*6, 0, Math.PI*2);
+      ctx.strokeStyle = r===0?'#ffe6a6':(r===1?'#ffb37a':'#ff7a7a');
+      ctx.lineWidth = 2; ctx.stroke();
+    }
+  }
+  function resetShot(from){
+    const src = from==='L'?left:right;
+    const dst = from==='L'?right:left;
+    proj.x = src.x + (from==='L'?src.w-4:4);
+    proj.y = src.y - 8;
+    const travel = 120;
+    const targetX = dst.x + dst.w/2;
+    const targetY = dst.y + 8;
+    proj.vx = (targetX - proj.x)/travel;
+    proj.vy = (targetY - proj.y + 0.5*G*travel*travel)/travel;
+    proj.active = true;
+    phase='fly';
+  }
+
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    drawGround(); drawCastle(left,'L'); drawCastle(right,'R');
+
+    if(phase==='idle'){
+      if(--delay<=0){ resetShot(turn); }
+    } else if(phase==='fly'){
+      ctx.fillStyle='#d1c5a1'; ctx.beginPath(); ctx.arc(proj.x,proj.y,4,0,Math.PI*2); ctx.fill();
+      proj.x += proj.vx; proj.y += proj.vy; proj.vy += G;
+      // impact check
+      const dst = turn==='L'?right:left;
+      if(proj.x > dst.x && proj.x < dst.x+dst.w && proj.y > dst.y && proj.y < dst.y+dst.h){
+        phase='boom'; (turn==='L'?boomR:boomL)=0;
+      }
+    } else if(phase==='boom'){
+      const dst = turn==='L'?right:left;
+      const cx = dst.x + dst.w/2, cy = dst.y + dst.h/2;
+      if(turn==='L'){ boomR+=2; explosion(cx,cy,boomR); if(boomR>28){ phase='idle'; delay=delayFrames; turn='R'; } }
+      else { boomL+=2; explosion(cx,cy,boomL); if(boomL>28){ phase='idle'; delay=delayFrames; turn='L'; } }
+    }
+
+    requestAnimationFrame(tick);
+  }
+  delay = 20; // small initial pause
+  requestAnimationFrame(tick);
+})();
+</script>
 </body>
 </html>
