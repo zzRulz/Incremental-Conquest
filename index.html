@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Incremental – Châteaux & Champs (v3 split)</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+  <h1>Incremental</h1>
+  <div class="stat" id="goldStat">Or: 1</div>
+  <div class="stat" id="incomeStat">Revenu/tour: 0</div>
+  <div class="stat" id="turnStat">Tour: 0</div>
+  <div style="margin-left:auto; display:flex; gap:8px">
+    <select class="btn" id="victoryMode">
+      <option value="castle" selected>Victoire: Château</option>
+      <option value="total">Victoire: Conquête totale</option>
+    </select>
+    <button class="btn primary" id="stepBtn">⏭ Fin du tour</button>
+    <button class="btn" id="resetBtn">⟲ Reset</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- LEFT: MAP -->
+  <section class="board-wrap">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+      <div class="muted">Carte (conquête uniquement via <b>fantassins</b>)</div>
+      <div class="muted">Grille: <span id="gridSizeLabel">10×10</span></div>
+    </div>
+    <div id="board" class="board" role="grid" aria-label="Plateau"></div>
+    <div class="small" style="margin-top:8px; color:#9aa4b2">
+      🏰 Ton château (milieu droit) • 🏯 Château IA (milieu gauche)
+    </div>
+  </section>
+
+  <!-- RIGHT: ECONOMY -->
+  <aside style="display:grid; gap:14px; height:fit-content">
+    <div class="card">
+      <h3>Phase d’achats</h3>
+      <div class="muted small" style="margin-bottom:8px">
+        Les <b>paysans</b> remplissent des <b>champs</b> (ci-dessous). <br/>Chaque champ rapporte <b>1 or / tour</b>.
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
+        <button class="btn" id="buyPeasant">Acheter paysan (1 or)</button>
+        <span class="small muted" id="peasantCount">0 paysan</span>
+      </div>
+      <div class="muted small" style="margin:8px 0 6px">Champs (capacité <span id="farmCapLabel">30</span>)</div>
+      <div id="farmGrid" class="farm-grid"></div>
+    </div>
+
+    <div class="card">
+      <h3>Armée (optionnel)</h3>
+      <div class="muted small" style="margin-bottom:8px">
+        Les <b>fantassins</b> tentent des captures à la fin de chaque tour. <br/>Les <b>paysans</b> ne conquièrent jamais.
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
+        <button class="btn" id="buyFootman">Acheter fantassin (10 or)</button>
+        <span class="small muted" id="footmanCount">0 fantassin</span>
+      </div>
+      <div class="small muted">Proba capture: neutre 65% • vs IA 40%</div>
+    </div>
+
+    <div class="card">
+      <h3>Paramètres</h3>
+      <label class="small muted">Taille de la grille</label>
+      <div style="display:flex; gap:8px">
+        <input id="sizeInput" type="number" min="7" max="25" value="10" class="btn" style="width:100%">
+        <button class="btn" id="resizeBtn">Redimensionner</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Journal</h3>
+      <div id="logBox" class="small" style="white-space:pre-wrap; color:#9aa4b2; min-height:120px">—</div>
+    </div>
+  </aside>
+</main>
+
+<script type="module" src="game.js"></script>
+</body>
+</html>
