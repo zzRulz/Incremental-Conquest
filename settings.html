@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Conquête – Paramètres</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+  <div class="title">Conquête — Paramètres</div>
+  <nav class="row">
+    <a class="btn small" href="menu.html">⟵ Menu</a>
+  </nav>
+</header>
+
+<main class="main">
+  <div class="card">
+    <h2>Réglages du jeu</h2>
+    <div class="grid-2">
+      <label>Taille de la grille
+        <input id="opt-size" type="number" min="7" max="25" value="10" class="btn" />
+      </label>
+      <label>Proba capture (neutre)
+        <input id="opt-pN" type="number" min="0.3" max="0.95" step="0.05" value="0.65" class="btn" />
+      </label>
+      <label>Proba victoire (vs joueur/IA)
+        <input id="opt-pE" type="number" min="0.2" max="0.9" step="0.05" value="0.40" class="btn" />
+      </label>
+      <label>Capacité de champs
+        <input id="opt-farmCap" type="number" min="6" max="60" step="6" value="30" class="btn" />
+      </label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="opt-save">💾 Sauvegarder</button>
+      <button class="btn" id="opt-reset">Reset par défaut</button>
+    </div>
+    <p class="small muted">Les paramètres sont stockés localement et s’appliquent aux nouvelles parties.</p>
+  </div>
+</main>
+
+<script type="module">
+const DEF_OPTS = { size:10, pNeutral:0.65, pEnemy:0.40, farmCap:30 };
+const OPTS_KEY = 'inc_spa_opts_v1';
+const el = {
+  size: document.getElementById('opt-size'),
+  pN: document.getElementById('opt-pN'),
+  pE: document.getElementById('opt-pE'),
+  farmCap: document.getElementById('opt-farmCap'),
+  save: document.getElementById('opt-save'),
+  reset: document.getElementById('opt-reset'),
+};
+function load(){ try{ return Object.assign({}, DEF_OPTS, JSON.parse(localStorage.getItem(OPTS_KEY)||'{}')); }catch(e){ return {...DEF_OPTS}; } }
+function save(o){ localStorage.setItem(OPTS_KEY, JSON.stringify(o)); }
+function loadForm(){ const o=load(); el.size.value=o.size; el.pN.value=o.pNeutral; el.pE.value=o.pEnemy; el.farmCap.value=o.farmCap; }
+el.save.addEventListener('click', ()=>{
+  const o = {
+    size: Math.max(7, Math.min(25, parseInt(el.size.value||'10',10))),
+    pNeutral: Math.max(0.3, Math.min(0.95, parseFloat(el.pN.value||'0.65'))),
+    pEnemy: Math.max(0.2, Math.min(0.9, parseFloat(el.pE.value||'0.40'))),
+    farmCap: Math.max(6, Math.min(60, parseInt(el.farmCap.value||'30',10))),
+  };
+  save(o); alert('Paramètres enregistrés ✅');
+});
+el.reset.addEventListener('click', ()=>{ save(DEF_OPTS); loadForm(); });
+loadForm();
+</script>
+</body>
+</html>

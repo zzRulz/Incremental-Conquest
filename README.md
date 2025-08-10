@@ -1,26 +1,26 @@
-# Conquête Incremental – SPA (Menu Solo / Versus / Paramètres)
-
-Cette version regroupe tout dans **un site** avec un **menu d’accueil** :
-- **Solo** : partie contre une **IA simple** (économie par tours).
-- **Versus Online** : création / rejoint d’une salle via **code à 4 chiffres** (Firebase RTDB).
-- **Paramètres** : taille de la grille, proba, capacité de champs. Sauvegardés en local.
+# Conquête – Version multipage (menu/solo/versus/settings)
 
 ## Fichiers
-- `index.html` — les 3 vues (SPA)
-- `styles.css` — styles
-- `app.js` — logique Solo / Versus / Settings
-- `firebase-config.sample.js` — exemple de config Firebase (à copier en `firebase-config.js` si tu veux le online)
+- `menu.html` — menu vertical (Solo / Versus Online / Paramètres)
+- `solo.html` — mode solo vs IA
+- `versus.html` — mode en ligne 1v1 (Firebase Realtime Database)
+- `settings.html` — options de base (taille, proba, capacité de champs)
+- `styles.css` — style commun
+- `game-solo.js` — logique du mode solo
+- `game-versus.js` — logique du mode versus
+- `firebase-config.sample.js` — exemple de config Firebase (à copier en `firebase-config.js`)
 
 ## Déploiement GitHub Pages
-- Mets ces fichiers **à la racine** du dépôt.
-- Si tu veux activer **Versus Online**, ajoute **aussi** `firebase-config.js` (non fourni ici) avec tes clés Firebase.
+- Mets **tous les fichiers à la racine** du dépôt.
+- L’URL d’accueil sera généralement `https://<user>.github.io/<repo>/menu.html` (ou renomme `menu.html` en `index.html` si tu veux que ce soit l’accueil par défaut).
 
-## Firebase (optionnel, pour Versus)
-- Crée un projet, active **Realtime Database**, copie la **config Web** → colle-la dans `firebase-config.js` :
+## Activer le versus (Firebase)
+1. Crée un projet Firebase → active **Realtime Database** (région `europe-west1` conseillée).
+2. Récupère le bloc `firebaseConfig` (app Web) et crée un fichier `firebase-config.js` à la **racine** du dépôt :
 ```js
-export const firebaseConfig = { /* clés */ };
+export const firebaseConfig = { /* tes clés */ };
 ```
-- Règles minimalistes (prototypage) :
+3. Dans RTDB → **Rules** → publie des règles minimales (prototypage) :
 ```json
 {
   "rules": {
@@ -34,5 +34,6 @@ export const firebaseConfig = { /* clés */ };
   }
 }
 ```
+4. Recharge `versus.html`, clique **Créer** pour obtenir un code 4 chiffres.
 
 Bon jeu !
