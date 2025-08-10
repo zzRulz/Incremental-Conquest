@@ -10,24 +10,19 @@
 <div class="center">
   <div class="panel">
     <h2>Settings</h2>
-    <div class="section">
-      <div class="row"><label style="min-width:110px">Musique</label><input id="musicRange" class="slider" type="range" min="0" max="100" step="1"></div>
-      <div class="row"><label style="min-width:110px">SFX</label><input id="sfxRange" class="slider" type="range" min="0" max="100" step="1"></div>
+    <div class="row"><label style="min-width:110px">Musique</label><input id="musicRange" class="slider" type="range" min="0" max="100" step="1"></div>
+    <div class="row"><label style="min-width:110px">SFX</label><input id="sfxRange" class="slider" type="range" min="0" max="100" step="1"></div>
+    <h3 style="margin:10px 0 0 0">Graphismes (pour la blague 😄)</h3>
+    <div class="options">
+      <label class="radio"><input type="radio" name="gfx" value="patatos"><span>Patatos</span></label>
+      <label class="radio"><input type="radio" name="gfx" value="rtx"><span>RTX ON</span></label>
     </div>
-    <div class="section">
-      <h3 style="margin:8px 0 0 0">Graphismes (juste pour le fun 😄)</h3>
-      <div class="options">
-        <label class="radio"><input type="radio" name="gfx" value="patatos"><span>Patatos</span></label>
-        <label class="radio"><input type="radio" name="gfx" value="rtx"><span>RTX ON</span></label>
-      </div>
-    </div>
-    <div class="back">
+    <div class="row" style="justify-content:center; margin-top:12px">
       <a class="btn" href="index.html">Retour</a>
     </div>
-    <div class="small">Ces options sont stockées localement (partagées avec le menu).</div>
+    <div class="small">Ces options sont sauvegardées localement.</div>
   </div>
 </div>
-
 <script src="settings.js"></script>
 <script>SettingsUI.load();</script>
 </body>

@@ -3,78 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Conquête – Versus Online</title>
+<title>Conquête – Versus (placeholder)</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<header>
-  <div class="title">Conquête — Versus Online</div>
-  <nav class="row">
-    <a class="btn small" href="menu.html">⟵ Menu</a>
-  </nav>
-</header>
-
-<main class="main">
-  <div class="grid-2">
-    <div>
-      <div class="row" style="gap:12px; margin-bottom:10px">
-        <div class="stat" id="v-gold">Or: 1</div>
-        <div class="stat" id="v-income">Revenu/tour: 0</div>
-        <div class="stat" id="v-turn">Tour: 0</div>
-        <div class="stat" id="v-role">Solo</div>
-      </div>
-      <div class="card">
-        <div class="row muted" style="justify-content:space-between; margin-bottom:8px">
-          <div>Grille: <span id="v-grid">10×10</span></div>
-          <div>🏰 J1 (droite) • 🏯 J2 (gauche)</div>
-        </div>
-        <div id="v-board" class="board"></div>
-      </div>
-    </div>
-
-    <div>
-      <div class="card">
-        <h3>Versus Online</h3>
-        <div class="row">
-          <button class="btn" id="v-create">Créer</button>
-          <input class="btn" id="v-room" placeholder="Code 4 chiffres" maxlength="4" />
-          <button class="btn" id="v-join">Rejoindre</button>
-        </div>
-        <div class="small muted" id="v-roomInfo">Hors ligne</div>
-        <div class="small warn" id="v-fbWarn">⚠️ Ajoute <b>firebase-config.js</b> à la racine (copie l’exemple).</div>
-      </div>
-
-      <div class="card">
-        <h3>Phase d’achats</h3>
-        <div class="row">
-          <button class="btn" id="v-buyP">Acheter paysan (1 or)</button>
-          <span class="small muted" id="v-pCount">0 paysan</span>
-        </div>
-        <div class="small muted" style="margin:8px 0 6px">Champs (capacité <span id="v-farmCap">30</span>)</div>
-        <div id="v-farms" class="farm-grid"></div>
-      </div>
-
-      <div class="card">
-        <h3>Armée (option)</h3>
-        <div class="row">
-          <button class="btn" id="v-buyF">Acheter fantassin (10 or)</button>
-          <span class="small muted" id="v-fCount">0 fantassin</span>
-        </div>
-        <div class="small muted">Tours alternés. Proba capture: neutre 65% • vs 40%</div>
-        <div class="row" style="margin-top:10px">
-          <button class="btn primary" id="v-step">⏭ Fin du tour</button>
-          <button class="btn" id="v-reset">⟲ Reset</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Journal</h3>
-        <div id="v-log" class="small muted" style="white-space:pre-wrap; min-height:120px">—</div>
-      </div>
+<div class="center">
+  <div class="panel">
+    <h2>Versus (placeholder)</h2>
+    <p class="small">Cette page évite le 404 quand tu cliques <b>Play</b>.<br>
+    Remplace-la plus tard par ta vraie page multijoueur (Firebase).</p>
+    <div style="display:flex; justify-content:center; margin-top:12px">
+      <a class="btn" href="index.html">Retour</a>
     </div>
   </div>
-</main>
-<footer class="footer">Versus 1v1 • Firebase Realtime Database</footer>
-<script type="module" src="game-versus.js"></script>
+</div>
 </body>
 </html>
