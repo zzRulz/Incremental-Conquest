@@ -1,35 +1,45 @@
-// ======= Modèle simple incremental par tours =======
+// Multiplayer 1v1 using Firebase Realtime Database
+// Requires a firebase-config.js module exporting { firebaseConfig }
+// If you don't have it yet, copy firebase-config.sample.js to firebase-config.js and fill your keys.
+
+import { firebaseConfig } from './firebase-config.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, onValue, set, update, get, child } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+// ======= Core game (same base as previous incremental) =======
 const CELL = { NEUTRAL:0, PLAYER:1, ENEMY:2 };
 const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
-const SAVE_KEY = 'inc_v3_split';
+const SAVE_KEY = 'inc_v4_mp_local';
+
+const MIN_EDGE_HP   = 4;
+const MAX_CENTER_HP = 10;
 
 const state = {
   n: 10,
   board: [],
   hp: [],
   turn: 0,
-  gold: 1,           // démarre à 1 gold
-  peasants: 0,       // chaque paysan remplit 1 champ = +1 or/ tour
-  footmen: 0,        // tentatives de capture / tour
-  farmCap: 30,       // nombre de cases champ affichées
-  castles: {player:[0,0], enemy:[0,0]},
+  // per-player economy (J1/J2)
+  p1: { gold:1, peasants:0, footmen:0, farmCap:30 },
+  p2: { gold:1, peasants:0, footmen:0, farmCap:30 },
+  castles: { p1:[0,0], p2:[0,0] },
   victoryMode: 'castle',
-  // Probabilités de conquête (fantassins)
   pNeutral: 0.65,
   pEnemy:   0.40,
-  defP: 1, defE: 2,  // PV cases capturées
+  defP: 1, defE: 2,
+  // MP
+  mp: { online:false, role:null, room:null, myId:null, active:'p1' } // role: 'p1' or 'p2'
 };
 
-// ---- PV de terrain (neutres) : faible au bord, fort au centre ----
-const MIN_EDGE_HP   = 4;   // HP minimum sur les bords
-const MAX_CENTER_HP = 10;  // HP au centre
+// Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 function neutralHPFor(i, j){
   const midCol = Math.floor(state.n/2);
-  const d = Math.abs(j - midCol) / Math.max(1, midCol); // 0 au centre, ~1 aux bords
-  const hp = Math.round(MIN_EDGE_HP + (MAX_CENTER_HP - MIN_EDGE_HP) * (1 - d));
-  return hp;
+  const d = Math.abs(j - midCol) / Math.max(1, midCol);
+  return Math.round(MIN_EDGE_HP + (MAX_CENTER_HP - MIN_EDGE_HP) * (1 - d));
 }
-
 function inb(n,x,y){ return x>=0 && x<n && y>=0 && y<n; }
 function neighbors(n,x,y){
   const out=[]; for(const [dx,dy] of DIRS){ const nx=x+dx,ny=y+dy; if(inb(n,nx,ny)) out.push([nx,ny]); } return out;
@@ -37,28 +47,21 @@ function neighbors(n,x,y){
 function newBoard(n){
   const B = Array.from({length:n}, _ => Array(n).fill(CELL.NEUTRAL));
   const mid = Math.floor(n/2);
-  // IA à gauche, joueur à droite
-  state.castles.enemy  = [mid, 0];
-  state.castles.player = [mid, n-1];
-  const [ex,ey] = state.castles.enemy;
-  const [px,py] = state.castles.player;
-  B[ex][ey] = CELL.ENEMY;
-  B[px][py] = CELL.PLAYER;
+  state.castles.p2  = [mid, 0];      // gauche = P2
+  state.castles.p1 = [mid, n-1];     // droite = P1
+  const [eX,eY] = state.castles.p2;
+  const [pX,pY] = state.castles.p1;
+  B[eX][eY] = CELL.ENEMY;
+  B[pX][pY] = CELL.PLAYER;
   return B;
 }
 function newHP(n, defP, defE){
-  // Initialise les HP de toute la carte avec gradient neutre
   const H = Array.from({length:n}, _ => Array(n).fill(1));
-  for(let i=0;i<n;i++){
-    for(let j=0;j<n;j++){
-      H[i][j] = neutralHPFor(i, j);
-    }
-  }
-  // Châteaux un peu plus tanky
-  const [ex,ey] = state.castles.enemy;
-  const [px,py] = state.castles.player;
-  H[px][py] = Math.max(defP, defP + 2);
-  H[ex][ey] = Math.max(defE, defE + 2);
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++) H[i][j] = neutralHPFor(i,j);
+  const [eX,eY] = state.castles.p2;
+  const [pX,pY] = state.castles.p1;
+  H[pX][pY] = Math.max(defP, defP+2);
+  H[eX][eY] = Math.max(defE, defE+2);
   return H;
 }
 function countCells(who){ let c=0; for(const r of state.board) for(const v of r) if(v===who) c++; return c; }
@@ -76,34 +79,27 @@ function frontierFor(who){
   return out;
 }
 
-// ======= Économie =======
-function incomePerTurn(){
-  // incremental : uniquement les champs rapportent
-  return state.peasants * 1;
-}
-function buyPeasant(){
-  const cost = 1;
-  if(state.gold < cost) return false;
-  if(state.peasants >= state.farmCap) { log('Capacité de champs atteinte.'); return false; }
-  state.gold -= cost;
-  state.peasants += 1;
-  log('👨\u200d🌾 +1 paysan → un champ est cultivé ( +1 or/ tour )');
+// Economy
+function incomePerTurn(role){ const p = role==='p1'?state.p1:state.p2; return p.peasants; }
+function buyPeasant(role){
+  const p = role==='p1'?state.p1:state.p2;
+  if(p.gold < 1) return false;
+  if(p.peasants >= p.farmCap) return false;
+  p.gold -= 1; p.peasants += 1; log(role, '👨‍🌾 +1 paysan → +1 champ');
   return true;
 }
-function buyFootman(){
-  const cost = 10; // cher pour rythme lent
-  if(state.gold < cost) return false;
-  state.gold -= cost;
-  state.footmen += 1;
-  log('🛡️ +1 fantassin (1 tentative de capture par tour).');
+function buyFootman(role){
+  const p = role==='p1'?state.p1:state.p2;
+  if(p.gold < 10) return false;
+  p.gold -= 10; p.footmen += 1; log(role, '🛡️ +1 fantassin');
   return true;
 }
 
-// ======= Conquête (fantassins seulement) =======
-function playerAutoConquer(){
-  const attempts = state.footmen;
+// Conquest (footmen only)
+function playerAutoConquer(role){
+  const attempts = (role==='p1'?state.p1:state.p2).footmen;
   if(attempts<=0) return 0;
-  const front = frontierFor(CELL.PLAYER);
+  const front = frontierFor(role==='p1'?CELL.PLAYER:CELL.ENEMY);
   if(front.length===0) return 0;
   let caps=0;
   for(let k=0;k<attempts;k++){
@@ -114,56 +110,39 @@ function playerAutoConquer(){
     if(Math.random() < p){
       state.hp[x][y] = Math.max(0, (state.hp[x][y]||1)-1);
       if(state.hp[x][y]===0){
-        state.board[x][y]=CELL.PLAYER;
-        state.hp[x][y]=state.defP;
+        state.board[x][y] = (role==='p1'?CELL.PLAYER:CELL.ENEMY);
+        state.hp[x][y] = (role==='p1'?state.defP:state.defE);
         caps++;
       }
     }
   }
   return caps;
 }
-function enemyAutoExpand(){
-  // IA lente → 1 tentative/ tour si elle a au moins 5 cases
-  const enemyCount = countCells(CELL.ENEMY);
-  if(enemyCount < 5) return 0;
-  const front = frontierFor(CELL.ENEMY);
-  if(front.length===0) return 0;
-  let caps=0;
-  const [x,y] = front[Math.floor(Math.random()*front.length)];
-  const p = (state.board[x][y]===CELL.NEUTRAL)?0.55:0.35;
-  if(Math.random()<p){
-    state.hp[x][y] = Math.max(0, (state.hp[x][y]||1)-1);
-    if(state.hp[x][y]===0){
-      state.board[x][y]=CELL.ENEMY;
-      state.hp[x][y]=state.defE;
-      caps++;
-    }
-  }
-  return caps;
-}
 
-// ======= Tour =======
+// One full turn for the active player
 function endTurn(){
+  const role = state.mp.online ? state.mp.active : 'p1'; // in solo, only p1 plays
+  const me = role==='p1'?state.p1:state.p2;
   state.turn++;
-  // PROD
-  const inc = incomePerTurn();
-  state.gold += inc;
-  // CONQUÊTE
-  const p = playerAutoConquer();
-  const e = enemyAutoExpand();
-  // Victoire / défaite selon mode
+  me.gold += incomePerTurn(role);
+  const caps = playerAutoConquer(role);
+
+  // Victory checks (castle mode)
+  const [eX,eY] = state.castles.p2, [pX,pY] = state.castles.p1;
   if(state.victoryMode==='castle'){
-    const [ex,ey] = state.castles.enemy;
-    const [px,py] = state.castles.player;
-    if(state.board[ex][ey] === CELL.PLAYER){ log(`🎉 Victoire (château ennemi) au tour ${state.turn}`); }
-    if(state.board[px][py] !== CELL.PLAYER){ log(`💀 Défaite (ton château est tombé) au tour ${state.turn}`); }
-  }else{
-    const tot = state.n*state.n, me=countCells(CELL.PLAYER);
-    if(me===tot) log(`🎉 Victoire par conquête totale au tour ${state.turn}`);
-    if(me===0)   log(`💀 Défaite : plus de territoire au tour ${state.turn}`);
+    if(state.board[eX][eY] === CELL.PLAYER){ log(role, `🎉 Victoire P1 (château P2) au tour ${state.turn}`); }
+    if(state.board[pX][pY] !== CELL.PLAYER){ log(role, `🎉 Victoire P2 (château P1) au tour ${state.turn}`); }
   }
-  log(`Tour ${state.turn}: +${inc} or | captures → toi ${p}, IA ${e}`);
-  render(); save();
+
+  log(role, `Fin tour ${state.turn} : +${incomePerTurn(role)} or • captures ${caps}`);
+
+  // Switch turn
+  if(state.mp.online){
+    state.mp.active = (state.mp.active==='p1')?'p2':'p1';
+    pushRoomState();
+  } else {
+    render(); saveLocal();
+  }
 }
 
 // ======= UI =======
@@ -185,6 +164,11 @@ const el = {
   gridSizeLabel: document.getElementById('gridSizeLabel'),
   log: document.getElementById('logBox'),
   victory: document.getElementById('victoryMode'),
+  room: document.getElementById('roomInput'),
+  createBtn: document.getElementById('createBtn'),
+  joinBtn: document.getElementById('joinBtn'),
+  roomInfo: document.getElementById('roomInfo'),
+  mpRole: document.getElementById('mpRole'),
 };
 
 function renderBoard(){
@@ -196,9 +180,9 @@ function renderBoard(){
       const v = state.board[i][j];
       const d = document.createElement('div');
       d.className = 'cell ' + (v===CELL.NEUTRAL?'neutral':v===CELL.PLAYER?'player':'enemy');
-      const isPC = (i===state.castles.player[0] && j===state.castles.player[1]);
-      const isEC = (i===state.castles.enemy[0]  && j===state.castles.enemy[1]);
-      d.textContent = (v===CELL.NEUTRAL)?'🏳':(v===CELL.PLAYER?(isPC?'🏰':'🟩'):(isEC?'🏯':'🟥'));
+      const isP1C = (i===state.castles.p1[0] && j===state.castles.p1[1]);
+      const isP2C = (i===state.castles.p2[0] && j===state.castles.p2[1]);
+      d.textContent = (v===CELL.NEUTRAL)?'🏳':(v===CELL.PLAYER?(isP1C?'🏰':'🟩'):(isP2C?'🏯':'🟥'));
       d.title = `PV: ${state.hp[i]?.[j] ?? 1}`;
       el.board.appendChild(d);
     }
@@ -206,67 +190,143 @@ function renderBoard(){
 }
 function renderFarms(){
   el.farmGrid.innerHTML='';
-  el.farmCapLabel.textContent = state.farmCap;
-  for(let i=0;i<state.farmCap;i++){
+  el.farmCapLabel.textContent = (myRole()==='p1'?state.p1.farmCap:state.p2.farmCap);
+  const peasants = (myRole()==='p1'?state.p1.peasants:state.p2.peasants);
+  const cap = (myRole()==='p1'?state.p1.farmCap:state.p2.farmCap);
+  for(let i=0;i<cap;i++){
     const f = document.createElement('div');
-    f.className = 'farm' + (i < state.peasants ? ' filled':'');
-    f.textContent = (i < state.peasants) ? '🌾' : '▢';
+    f.className = 'farm' + (i < peasants ? ' filled':'');
+    f.textContent = (i < peasants) ? '🌾' : '▢';
     el.farmGrid.appendChild(f);
   }
 }
+function myRole(){ return state.mp.online ? state.mp.role : 'p1'; }
+
 function render(){
-  el.gold.textContent = `Or: ${state.gold}`;
-  el.income.textContent = `Revenu/tour: ${incomePerTurn()}`;
+  const role = myRole();
+  const me = role==='p1'?state.p1:state.p2;
+  el.gold.textContent = `Or: ${me.gold}`;
+  el.income.textContent = `Revenu/tour: ${incomePerTurn(role)}`;
   el.turn.textContent = `Tour: ${state.turn}`;
-  el.pCount.textContent = `${state.peasants} paysan${state.peasants>1?'s':''}`;
-  el.fCount.textContent = `${state.footmen} fantassin${state.footmen>1?'s':''}`;
+  el.pCount.textContent = `${me.peasants} paysan${me.peasants>1?'s':''}`;
+  el.fCount.textContent = `${me.footmen} fantassin${me.footmen>1?'s':''}`;
   el.gridSizeLabel.textContent = `${state.n}×${state.n}`;
   el.victory.value = state.victoryMode;
+  el.mpRole.textContent = state.mp.online ? (state.mp.role==='p1'?'J1':'J2') + (state.mp.active===state.mp.role?' (à toi)':' (attends)') : 'Solo';
+  el.roomInfo.textContent = state.mp.online ? `Salle ${state.mp.room} • ${state.mp.role.toUpperCase()} • Tour: ${state.mp.active.toUpperCase()}` : 'Hors ligne (solo)';
+  el.buyP.disabled = !(me.gold >= 1 && me.peasants < me.farmCap && (!state.mp.online || state.mp.active===state.mp.role));
+  el.buyF.disabled = !(me.gold >= 10 && (!state.mp.online || state.mp.active===state.mp.role));
+  el.step.disabled = !!(state.mp.online && state.mp.active!==state.mp.role);
   renderBoard();
   renderFarms();
-  el.buyP.disabled = !(state.gold >= 1 && state.peasants < state.farmCap);
-  el.buyF.disabled = !(state.gold >= 10);
 }
-function log(msg){
+function log(role, msg){
+  const tag = role.toUpperCase();
   const t = new Date().toLocaleTimeString();
-  el.log.textContent = `[${t}] ${msg}\n` + el.log.textContent;
+  el.log.textContent = `[${t}] ${tag} · ${msg}\n` + el.log.textContent;
 }
 
-// ======= Save / Load / Reset =======
-function save(){
-  try{
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-  }catch(e){}
-}
-function load(){
+// ======= Local save for solo =========
+function saveLocal(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){} }
+function loadLocal(){
   try{
     const raw = localStorage.getItem(SAVE_KEY);
     if(!raw) return false;
     const s = JSON.parse(raw);
+    // keep mp offline in solo load
+    const mpKeep = state.mp;
     Object.assign(state, s);
+    state.mp = mpKeep;
     if(!state.board || state.board.length!==state.n){ state.board = newBoard(state.n); }
     if(!state.hp || state.hp.length!==state.n){ state.hp = newHP(state.n, state.defP, state.defE); }
     return true;
   }catch(e){ return false; }
 }
-function hardReset(){
-  Object.assign(state, {
-    n:10, board:newBoard(10), hp:[], turn:0,
-    gold:1, peasants:0, footmen:0, farmCap:30,
-    castles: state.castles, victoryMode:'castle',
-    pNeutral:0.65, pEnemy:0.40, defP:1, defE:2
-  });
+
+// ======= Multiplayer plumbing (Firebase) =======
+function roomRef(){ return ref(db, 'rooms/' + state.mp.room); }
+
+function randomRoom(){
+  return String(Math.floor(1000 + Math.random()*9000));
+}
+
+async function createRoom(){
+  const code = randomRoom();
+  state.mp.online = true;
+  state.mp.role = 'p1';
+  state.mp.room = code;
+  state.mp.active = 'p1';
+  // fresh state
+  state.n = 10;
+  state.board = newBoard(state.n);
   state.hp = newHP(state.n, state.defP, state.defE);
-  document.getElementById('sizeInput').value = state.n;
-  render(); save();
-  log('Réinitialisation de la partie.');
+  state.turn = 0;
+  state.p1 = { gold:1, peasants:0, footmen:0, farmCap:30 };
+  state.p2 = { gold:1, peasants:0, footmen:0, farmCap:30 };
+  await set(roomRef(), { state });
+  render();
+  log('p1', 'Salle créée. Partage le code: ' + code);
+}
+
+async function joinRoom(code){
+  const snap = await get(child(ref(db), 'rooms/' + code));
+  if(!snap.exists()){ alert('Salle introuvable'); return; }
+  state.mp.online = true;
+  state.mp.role = 'p2';
+  state.mp.room = code;
+  const remote = snap.val().state;
+  Object.assign(state, remote);
+  state.mp.role = 'p2';
+  // Write back presence (optional small flag)
+  await update(roomRef(), { joined:true });
+  render();
+  log('p2', 'Rejoint la salle ' + code);
+}
+
+// Live sync
+onValue(ref(db, 'rooms'), (snapshot)=>{
+  if(!state.mp.online || !state.mp.room) return;
+  const data = snapshot.val();
+  if(!data) return;
+  const room = data[state.mp.room];
+  if(!room || !room.state) return;
+  const beforeRole = state.mp.role;
+  const mpKeep = state.mp;
+  Object.assign(state, room.state);
+  state.mp = mpKeep; // keep local identity
+  render();
+});
+
+async function pushRoomState(){
+  if(!state.mp.online) return;
+  await update(roomRef(), { state });
 }
 
 // ======= Events =======
-document.getElementById('buyPeasant').addEventListener('click', ()=>{ if(buyPeasant()){ render(); save(); } });
-document.getElementById('buyFootman').addEventListener('click', ()=>{ if(buyFootman()){ render(); save(); } });
+document.getElementById('buyPeasant').addEventListener('click', ()=>{ if(buyPeasant(myRole())){ state.mp.online?pushRoomState():(render(),saveLocal()); } });
+document.getElementById('buyFootman').addEventListener('click', ()=>{ if(buyFootman(myRole())){ state.mp.online?pushRoomState():(render(),saveLocal()); } });
 document.getElementById('stepBtn').addEventListener('click', endTurn);
-document.getElementById('resetBtn').addEventListener('click', hardReset);
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(state.mp.online){
+    // reset room state (only active player allowed)
+    if(state.mp.role!=='p1'){ alert('Seul J1 peut reset'); return; }
+    state.board = newBoard(state.n);
+    state.hp = newHP(state.n, state.defP, state.defE);
+    state.turn = 0;
+    state.p1 = { gold:1, peasants:0, footmen:0, farmCap:30 };
+    state.p2 = { gold:1, peasants:0, footmen:0, farmCap:30 };
+    state.mp.active = 'p1';
+    pushRoomState();
+  }else{
+    // solo reset
+    state.board = newBoard(state.n);
+    state.hp = newHP(state.n, state.defP, state.defE);
+    state.turn = 0;
+    state.p1 = { gold:1, peasants:0, footmen:0, farmCap:30 };
+    state.p2 = { gold:1, peasants:0, footmen:0, farmCap:30 };
+    render(); saveLocal();
+  }
+});
 document.getElementById('resizeBtn').addEventListener('click', ()=>{
   let n = parseInt(document.getElementById('sizeInput').value||'10',10);
   n = Math.max(7, Math.min(25, n));
@@ -274,24 +334,29 @@ document.getElementById('resizeBtn').addEventListener('click', ()=>{
   state.board = newBoard(n);
   state.hp = newHP(n, state.defP, state.defE);
   state.turn = 0;
-  render(); save();
-  log(`Nouvelle grille ${n}×${n}.`);
+  if(state.mp.online) pushRoomState(); else { render(); saveLocal(); }
 });
 document.getElementById('victoryMode').addEventListener('change', (e)=>{
   state.victoryMode = e.target.value;
-  save();
-  log(`Condition de victoire: ${state.victoryMode==='castle'?'Capture du château':'Conquête totale'}`);
+  state.mp.online?pushRoomState():(render(),saveLocal());
+});
+
+document.getElementById('createBtn').addEventListener('click', createRoom);
+document.getElementById('joinBtn').addEventListener('click', ()=>{
+  const code = (document.getElementById('roomInput').value||'').trim();
+  if(!/^[0-9]{4}$/.test(code)){ alert('Code = 4 chiffres'); return; }
+  joinRoom(code);
 });
 
 // ======= Init =======
 (function init(){
-  if(!load()){
+  if(!loadLocal()){
     state.board = newBoard(state.n);
     state.hp = newHP(state.n, state.defP, state.defE);
   }
   document.getElementById('sizeInput').value = state.n;
   render();
   if(state.turn===0){
-    log("Bienvenue ! Tour 0 — Tu as 1 or. Achète un paysan (1 or) pour remplir ton 1er champ.");
+    log('p1', 'Solo prêt. Ou clique CRÉER pour générer un code 4 chiffres.');
   }
 })();
