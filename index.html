@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<<<<<<< HEAD
+<title>Châteaux & Champs – Online (Auth + Menu + Jeu)</title>
+=======
 <title>Châteaux & Champs – Incremental (v5)</title>
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --muted:#9aa4b2; --text:#e6e8eb;
@@ -12,14 +16,23 @@
   }
   *{box-sizing:border-box}
   body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial; background:#0f1115; color:var(--text)}
+<<<<<<< HEAD
+  header{padding:14px 18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    border-bottom:1px solid #222833; background:#111520; position:sticky; top:0; z-index:5}
+=======
   header{
     padding:14px 18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
     border-bottom:1px solid #222833; background:#111520; position:sticky; top:0; z-index:5
   }
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   header h1{font-size:18px; margin:0 10px 0 0}
   .btn{border:1px solid #2a3245; background:#161a22; color:var(--text); padding:10px 14px; border-radius:10px; cursor:pointer}
   .btn.primary{background:linear-gradient(180deg,#1a2330,#17202b)}
   .btn[disabled]{opacity:.45; cursor:not-allowed}
+<<<<<<< HEAD
+  input, select{border:1px solid #2a3245; background:#161a22; color:#e6e8eb; padding:10px 12px; border-radius:10px}
+=======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   .stat{min-width:120px; padding:8px 12px; border:1px solid #2a3245; border-radius:12px; background:#141923; text-align:center}
   .layout{display:grid; grid-template-columns: 1fr 360px; gap:18px; padding:18px; max-width:1200px; margin:0 auto}
   @media (max-width: 980px){ .layout{grid-template-columns:1fr} }
@@ -27,6 +40,11 @@
   .card h3{margin:0 0 10px 0; font-size:15px; color:#d6d9df}
   .muted{color:var(--muted); font-size:13px}
   .small{font-size:12px; color:#8b95a8}
+<<<<<<< HEAD
+  .flex{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .right{margin-left:auto}
+=======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 
   /* Board */
   .board-wrap{border:1px solid #263044; border-radius:14px; padding:14px; background:#121720}
@@ -49,11 +67,44 @@
   .farm.filled{border-style:solid; background:linear-gradient(180deg,#12211a,#0f1b15); color:#7cfe9a}
   .log-head{display:flex; align-items:center; justify-content:space-between}
   .link{cursor:pointer; color:#9aa4b2; text-decoration:underline; font-size:12px}
+<<<<<<< HEAD
+
+  /* Overlay Auth */
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:99}
+  .modal{width:min(560px, 92vw); background:#121720; border:1px solid #2a3245; border-radius:14px; padding:16px}
+  .tabs{display:flex; gap:6px; margin-bottom:10px}
+  .tab{flex:1; text-align:center; padding:10px; border-radius:10px; border:1px solid #2a3245; cursor:pointer}
+  .tab.active{background:#161a22}
+  .row{display:grid; grid-template-columns: 1fr; gap:10px; margin:10px 0}
+  .menu{max-width:900px; margin:24px auto; padding:16px; border:1px solid #2a3245; border-radius:14px; background:#121720; display:none}
+  .menu h2{margin-top:0}
+=======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 </style>
 </head>
 <body>
 <header>
   <h1>Châteaux & Champs</h1>
+<<<<<<< HEAD
+  <div id="userSlot" class="muted small">Non connecté</div>
+  <div class="right flex">
+    <button class="btn" id="btnLogout" style="display:none">Déconnexion</button>
+  </div>
+</header>
+
+<!-- MAIN MENU -->
+<section id="mainMenu" class="menu">
+  <h2>Menu</h2>
+  <div class="flex">
+    <button class="btn primary" id="btnPlay">▶️ Play</button>
+    <button class="btn" id="btnSettings">⚙️ Settings</button>
+  </div>
+  <div class="small muted" style="margin-top:8px">Connecté en tant que <b id="menuUser"></b> — Royaume : <b id="menuRealm"></b> (Roi : <b id="menuKing"></b>)</div>
+</section>
+
+<!-- GAME (hidden until Play) -->
+<main id="gameRoot" class="layout" style="display:none">
+=======
   <div class="stat" id="goldStat">Or: 0</div>
   <div class="stat" id="incomeStat">Prod: 0 or / 10 s</div>
   <div class="stat" id="turnStat" title="Tours (pour la partie conquête)">Tour: 0</div>
@@ -68,6 +119,7 @@
 </header>
 
 <main class="layout">
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   <!-- LEFT: MAP -->
   <section class="board-wrap">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
@@ -87,7 +139,11 @@
       <div class="muted small" style="margin-bottom:8px">
         1 <b>paysan</b> cultivant 1 <b>ferme</b> produit <b>+1 or / 10 s</b>. <br/>Départ : 1 ferme ouverte sur 9.
       </div>
+<<<<<<< HEAD
+      <div class="flex" style="margin-bottom:8px">
+=======
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
         <button class="btn" id="buyPeasant">Acheter paysan (5 or)</button>
         <button class="btn" id="unlockFarm">Déverrouiller une ferme (5 or)</button>
         <span class="small muted" id="peasantCount">0 paysan</span>
@@ -102,7 +158,11 @@
       <div class="muted small" style="margin-bottom:8px">
         Les <b>fantassins</b> tentent des captures à la fin de chaque tour. L’économie tourne en continu.
       </div>
+<<<<<<< HEAD
+      <div class="flex" style="margin-bottom:8px">
+=======
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
         <button class="btn" id="buyFootman">Acheter fantassin (10 or)</button>
         <span class="small muted" id="footmanCount">0 fantassin</span>
       </div>
@@ -112,7 +172,11 @@
     <div class="card">
       <h3>Paramètres</h3>
       <label class="small muted">Taille de la grille</label>
+<<<<<<< HEAD
+      <div class="flex">
+=======
       <div style="display:flex; gap:8px">
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
         <input id="sizeInput" type="number" min="7" max="25" value="10" class="btn" style="width:100%">
         <button class="btn" id="resizeBtn">Redimensionner</button>
       </div>
@@ -128,13 +192,296 @@
   </aside>
 </main>
 
+<<<<<<< HEAD
+<!-- AUTH OVERLAY -->
+<div id="authOverlay" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="tabs">
+      <div id="tabLogin" class="tab active">Se connecter</div>
+      <div id="tabRegister" class="tab">Créer un compte</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="viewLogin">
+      <div class="row">
+        <input id="loginUsername" placeholder="Pseudo (3–16)" maxlength="16">
+        <input id="loginPassword" placeholder="Mot de passe (≥4)" type="password" maxlength="64">
+      </div>
+      <div class="flex">
+        <button class="btn primary" id="btnDoLogin">Connexion</button>
+        <div id="loginMsg" class="small muted"></div>
+      </div>
+    </div>
+
+    <!-- REGISTER + REALM -->
+    <div id="viewRegister" style="display:none">
+      <div class="row">
+        <input id="regUsername" placeholder="Pseudo (3–16)" maxlength="16">
+        <input id="regPassword" placeholder="Mot de passe (≥4)" type="password" maxlength="64">
+      </div>
+      <div class="row">
+        <input id="realmName" placeholder="Nom du royaume (3–24)" maxlength="24">
+        <input id="kingName" placeholder="Nom du roi (3–24)" maxlength="24">
+      </div>
+      <div class="flex">
+        <button class="btn primary" id="btnDoRegister">Créer mon royaume</button>
+        <div id="regMsg" class="small muted"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats bar -->
+<div id="statsBar" style="display:none; padding:8px 18px; border-top:1px solid #222833; background:#111520">
+  <div class="flex">
+    <div class="stat" id="goldStat">Or: 0</div>
+    <div class="stat" id="incomeStat">Prod: 0 or / 10 s</div>
+    <div class="stat" id="turnStat" title="Tours (pour la partie conquête)">Tour: 0</div>
+  </div>
+</div>
+
+<!-- Firebase (Compat CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // === Ta configuration Firebase (collée) ===
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-gDB8UF79FNHkHhlLavrzvjeOb6vtRh8",
+    authDomain: "conquest-db-c9106.firebaseapp.com",
+    databaseURL: "https://conquest-db-c9106-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "conquest-db-c9106",
+    storageBucket: "conquest-db-c9106.firebasestorage.app",
+    messagingSenderId: "190573879824",
+    appId: "1:190573879824:web:3ee02b7f14214d877ee095"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<script>
+(()=>{
+// ===== Helpers =====
+const $ = sel => document.querySelector(sel);
+const on = (el, ev, fn) => el.addEventListener(ev, fn);
+const SAVE_KEY = 'inc_v5';
+const SESSION_KEY = 'cc_session_v1'; // session {username}
+
+// SHA-256 hex (pour mot de passe simple côté client)
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ===== Auth UI =====
+const authOverlay = $('#authOverlay');
+const tabLogin = $('#tabLogin');
+const tabRegister = $('#tabRegister');
+const viewLogin = $('#viewLogin');
+const viewRegister = $('#viewRegister');
+const loginUsername = $('#loginUsername');
+const loginPassword = $('#loginPassword');
+const btnDoLogin = $('#btnDoLogin');
+const loginMsg = $('#loginMsg');
+
+const regUsername = $('#regUsername');
+const regPassword = $('#regPassword');
+const realmName = $('#realmName');
+const kingName = $('#kingName');
+const btnDoRegister = $('#btnDoRegister');
+const regMsg = $('#regMsg');
+
+const userSlot = $('#userSlot');
+const btnLogout = $('#btnLogout');
+const mainMenu = $('#mainMenu');
+const menuUser = $('#menuUser');
+const menuRealm = $('#menuRealm');
+const menuKing = $('#menuKing');
+const btnPlay = $('#btnPlay');
+const btnSettings = $('#btnSettings');
+const gameRoot = $('#gameRoot');
+const statsBar = $('#statsBar');
+
+let currentUser = null; // {username}
+let currentProfile = null; // user doc
+
+function showAuth(){ authOverlay.style.display='flex'; }
+function hideAuth(){ authOverlay.style.display='none'; }
+function switchTab(which){
+  const login = which==='login';
+  tabLogin.classList.toggle('active', login);
+  tabRegister.classList.toggle('active', !login);
+  viewLogin.style.display = login ? 'block' : 'none';
+  viewRegister.style.display = login ? 'none' : 'block';
+}
+
+// Firestore helpers
+function usersCol(){ return firebase.firestore().collection('users'); }
+function userDocId(username){ return (username||'').trim().toLowerCase(); }
+async function getUser(username){
+  const snap = await usersCol().doc(userDocId(username)).get();
+  return snap.exists ? { id:snap.id, ...snap.data() } : null;
+}
+async function createUser({username, passHash, realmName, kingName}){
+  const now = new Date().toISOString();
+  const doc = {
+    username,
+    passSha256: passHash,
+    createdAt: now,
+    realm: { name: realmName, king: kingName }
+  };
+  await usersCol().doc(userDocId(username)).set(doc, {merge:false});
+  return doc;
+}
+
+// Session
+function saveSession(username){
+  localStorage.setItem(SESSION_KEY, JSON.stringify({username}));
+}
+function loadSession(){
+  try{ const raw = localStorage.getItem(SESSION_KEY); return raw? JSON.parse(raw): null; }catch(e){ return null; }
+}
+function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+
+function updateHeader(){
+  if(currentUser){
+    userSlot.textContent = `Connecté : ${currentUser.username}`;
+    btnLogout.style.display = 'inline-flex';
+  }else{
+    userSlot.textContent = 'Non connecté';
+    btnLogout.style.display = 'none';
+  }
+}
+
+// Login
+on(btnDoLogin, 'click', async ()=>{
+  const u = loginUsername.value.trim();
+  const p = loginPassword.value;
+  loginMsg.textContent='';
+  if(u.length<3 || p.length<4){ loginMsg.textContent='Pseudo ≥3, mdp ≥4.'; return; }
+  const doc = await getUser(u);
+  if(!doc){ loginMsg.textContent='Compte introuvable. Passe sur l’onglet “Créer un compte”.'; return; }
+  const hash = await sha256Hex(p);
+  if(hash !== doc.passSha256){ loginMsg.textContent='Mot de passe incorrect.'; return; }
+  currentUser = {username: doc.username};
+  currentProfile = doc;
+  saveSession(doc.username);
+  updateHeader();
+  hideAuth();
+  showMenu();
+});
+
+// Register + Realm
+on(btnDoRegister, 'click', async ()=>{
+  const u = regUsername.value.trim();
+  const p = regPassword.value;
+  const rn = realmName.value.trim();
+  const kn = kingName.value.trim();
+  regMsg.textContent='';
+  if(u.length<3){ regMsg.textContent='Pseudo trop court (≥3).'; return; }
+  if(p.length<4){ regMsg.textContent='Mot de passe trop court (≥4).'; return; }
+  if(rn.length<3 || kn.length<3){ regMsg.textContent='Royaume et Roi ≥3 caractères.'; return; }
+  const exists = await getUser(u);
+  if(exists){ regMsg.textContent='Ce pseudo est déjà pris.'; return; }
+  const hash = await sha256Hex(p);
+  const doc = await createUser({username:u, passHash:hash, realmName:rn, kingName:kn});
+  currentUser = {username: u};
+  currentProfile = doc;
+  saveSession(u);
+  updateHeader();
+  hideAuth();
+  showMenu();
+});
+
+on(tabLogin,'click',()=>switchTab('login'));
+on(tabRegister,'click',()=>switchTab('register'));
+on(btnLogout,'click',()=>{
+  currentUser=null; currentProfile=null; clearSession(); updateHeader();
+  hideGame(); hideMenu(); showAuth();
+});
+
+function showMenu(){
+  menuUser.textContent = currentProfile?.username || currentUser?.username || '';
+  menuRealm.textContent = currentProfile?.realm?.name || '—';
+  menuKing.textContent = currentProfile?.realm?.king || '—';
+  mainMenu.style.display='block';
+  statsBar.style.display='none';
+  gameRoot.style.display='none';
+}
+function hideMenu(){ mainMenu.style.display='none'; }
+function showGame(){
+  statsBar.style.display='block';
+  gameRoot.style.display='grid';
+  hideMenu();
+}
+function hideGame(){ statsBar.style.display='none'; gameRoot.style.display='none'; }
+
+on(btnPlay,'click', showGame);
+on(btnSettings,'click', ()=>{
+  alert('Settings à venir : changer nom du roi, audio, etc.');
+});
+
+// Auto session
+(async function initAuth(){
+  const sess = loadSession();
+  if(sess && sess.username){
+    const doc = await getUser(sess.username);
+    if(doc){
+      currentUser = {username: doc.username};
+      currentProfile = doc;
+      updateHeader();
+      showMenu();
+      return;
+    }
+  }
+  // No session
+  updateHeader();
+  switchTab('login');
+  showAuth();
+})();
+
+})();
+</script>
+
+<!-- === GAME LOGIC (v5 économie temps réel) === -->
+<script>
+(()=>{
+// v5 game logic (économie + carte + UI)
+=======
 <script>
 (()=>{
 // ======= Constantes & helpers =======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 const CELL = { NEUTRAL:0, PLAYER:1, ENEMY:2 };
 const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
 const SAVE_KEY = 'inc_v5';
 
+<<<<<<< HEAD
+const BRONZE_PER_OR = 100;
+const BRONZE_PER_FARM_PER_SEC = 10;
+const FARM_MAX = 9;
+const FARM_UNLOCK_COSTS = [5,20,60,150,400,1000,2500,6000];
+const PEASANT_BASE_COST = 5;
+const PEASANT_INFLATION = 1.15;
+
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function inb(n,x,y){ return x>=0 && x<n && y>=0 && y<n; }
+function neighbors(n,i,j){
+  const out=[]; for(const [dx,dy] of DIRS){ const nx=i+dx,ny=j+dy; if(inb(n,nx,ny)) out.push([nx,ny]); } return out;
+}
+function orFromBronze(b){ return Math.floor(b/BRONZE_PER_OR); }
+
+const state = {
+  n: 10, board: [], hp: [], turn: 0,
+  castles: {player:[0,0], enemy:[0,0]},
+  victoryMode: 'castle',
+  pNeutral: 0.65, pEnemy: 0.40, defP: 1, defE: 2,
+  bronze: 0, peasants: 0, peasantCost: PEASANT_BASE_COST,
+  farmsOpen: 1, farmsFilled: 0, footmen: 0,
+  logs: [], logCollapsed: false
+};
+
+=======
 // Économie
 const BRONZE_PER_OR = 100;      // 1 or = 100 bronze
 const BRONZE_PER_FARM_PER_SEC = 10; // 0.1 or/s = 10 bronze/s
@@ -175,6 +522,7 @@ const state = {
 };
 
 // ======= Génération de carte (inchangée) =======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 function newBoard(n){
   const B = Array.from({length:n}, _ => Array(n).fill(CELL.NEUTRAL));
   const mid = Math.floor(n/2);
@@ -195,7 +543,10 @@ function newHP(n, defP, defE){
   return H;
 }
 
+<<<<<<< HEAD
+=======
 // ======= Conquête (identique à ta base) =======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 function countCells(who){ let c=0; for(const r of state.board) for(const v of r) if(v===who) c++; return c; }
 function frontierFor(who){
   const n=state.n, seen=new Set(), out=[];
@@ -270,6 +621,14 @@ function endTurn(){
   render(); save();
 }
 
+<<<<<<< HEAD
+// Economy
+function clampFarms(){ state.farmsOpen = Math.max(1, Math.min(9, state.farmsOpen||1)); }
+function currentFarmsFilled(){ return Math.min(state.farmsOpen, state.peasants); }
+function currentProdBronzePerSec(){ return currentFarmsFilled() * BRONZE_PER_FARM_PER_SEC; }
+function canAfford(orCost){ return Math.floor(state.bronze/BRONZE_PER_OR) >= orCost; }
+function spend(orCost){ if(!canAfford(orCost)) return false; state.bronze -= orCost*BRONZE_PER_OR; return true; }
+=======
 // ======= Économie temps réel =======
 function currentFarmsFilled(){
   return Math.min(state.farmsOpen, state.peasants);
@@ -285,6 +644,7 @@ function spend(orCost){
   state.bronze -= orCost * BRONZE_PER_OR;
   return true;
 }
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 function buyPeasant(){
   const cost = state.peasantCost;
   if(!spend(cost)) return false;
@@ -292,6 +652,25 @@ function buyPeasant(){
   state.peasantCost = Math.ceil(state.peasantCost * PEASANT_INFLATION);
   log(`👨‍🌾 +1 paysan (coût prochain: ${state.peasantCost} or)`);
   updateFarmsFilled();
+<<<<<<< HEAD
+  render(); save(); return true;
+}
+function nextUnlockCost(){ const o=state.farmsOpen; if(o>=FARM_MAX) return null; return FARM_UNLOCK_COSTS[o-1]; }
+function unlockFarm(){
+  const cost = nextUnlockCost(); if(cost==null) return false;
+  if(!spend(cost)) return false;
+  state.farmsOpen = Math.max(1, Math.min(9, state.farmsOpen+1));
+  log(`🗝️ Nouvelle ferme ouverte (${state.farmsOpen}/${FARM_MAX}).`);
+  updateFarmsFilled(); render(); save(); return true;
+}
+function updateFarmsFilled(){ state.farmsFilled = currentFarmsFilled(); }
+function tickEconomy(){
+  const inc = currentProdBronzePerSec();
+  if(inc>0){ state.bronze += inc; renderMoneyOnly(); }
+}
+
+// UI
+=======
   render(); save();
   return true;
 }
@@ -324,6 +703,7 @@ function tickEconomy(){
 }
 
 // ======= UI =======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 const el = {
   board: document.getElementById('board'),
   gold: document.getElementById('goldStat'),
@@ -379,11 +759,19 @@ function renderFarms(){
   const idle = Math.max(0, state.peasants - open);
   const active = Math.min(state.peasants, open);
   el.pCount.textContent = `${state.peasants} paysan${state.peasants>1?'s':''} (${active} actifs, ${idle} en attente)`;
+<<<<<<< HEAD
+  el.prodNow.textContent = String(filled);
+}
+
+function renderMoneyOnly(){
+  const or = Math.floor(state.bronze/BRONZE_PER_OR);
+=======
   el.prodNow.textContent = String(filled); // or/10s
 }
 
 function renderMoneyOnly(){
   const or = orFromBronze(state.bronze);
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   el.gold.textContent = `Or: ${or}`;
   el.income.textContent = `Prod: ${currentFarmsFilled()} or / 10 s`;
 }
@@ -394,6 +782,15 @@ function render(){
   el.victory.value = state.victoryMode;
   renderBoard();
   renderFarms();
+<<<<<<< HEAD
+  el.buyP.textContent = `Acheter paysan (${state.peasantCost} or)`;
+  const nxt = nextUnlockCost();
+  el.unlockFarm.textContent = `Déverrouiller une ferme${nxt!=null?` (${nxt} or)`:''}`;
+  el.unlockFarm.disabled = (nxt==null) || !(Math.floor(state.bronze/BRONZE_PER_OR) >= nxt);
+  el.buyP.disabled = !(Math.floor(state.bronze/BRONZE_PER_OR) >= state.peasantCost);
+  el.buyF.disabled = !(Math.floor(state.bronze/BRONZE_PER_OR) >= 10);
+  el.gridSizeLabel.textContent = `${state.n}×${state.n}`;
+=======
   // Boutons & coûts
   el.buyP.textContent = `Acheter paysan (${state.peasantCost} or)`;
   const nxt = nextUnlockCost();
@@ -403,6 +800,7 @@ function render(){
   el.buyF.disabled = !canAfford(10);
   el.gridSizeLabel.textContent = `${state.n}×${state.n}`;
   // Journal
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   el.log.textContent = (state.logs.length? state.logs.slice(-10).join('\n') : '—');
   el.log.style.display = state.logCollapsed ? 'none' : 'block';
   el.toggleLog.textContent = state.logCollapsed ? 'Déplier' : 'Réduire';
@@ -415,7 +813,11 @@ function log(msg){
   render();
 }
 
+<<<<<<< HEAD
+// Save / Load / Reset
+=======
 // ======= Save / Load / Reset =======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
 }
@@ -425,10 +827,16 @@ function load(){
     if(!raw) return false;
     const s = JSON.parse(raw);
     Object.assign(state, s);
+<<<<<<< HEAD
+    if(!state.board || state.board.length!==state.n){ state.board = newBoard(state.n); }
+    if(!state.hp || state.hp.length!==state.n){ state.hp = newHP(state.n, state.defP, state.defE); }
+    state.farmsOpen = Math.max(1, Math.min(9, state.farmsOpen||1));
+=======
     // garde-fous
     if(!state.board || state.board.length!==state.n){ state.board = newBoard(state.n); }
     if(!state.hp || state.hp.length!==state.n){ state.hp = newHP(state.n, state.defP, state.defE); }
     state.farmsOpen = clamp(state.farmsOpen||1,1,FARM_MAX);
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
     state.peasantCost = Math.max(PEASANT_BASE_COST, state.peasantCost||PEASANT_BASE_COST);
     updateFarmsFilled();
     return true;
@@ -442,28 +850,50 @@ function hardReset(){
     castles: keepCastles, victoryMode: state.victoryMode,
     pNeutral:0.65, pEnemy:0.40, defP:1, defE:2,
     bronze:0, peasants:0, peasantCost:PEASANT_BASE_COST,
+<<<<<<< HEAD
+    farmsOpen:1, farmsFilled:0, footmen:0,
+    logs:[], logCollapsed:false
+=======
     farmsOpen:1, farmsFilled:0, logs:[], logCollapsed:false
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   });
   state.hp = newHP(state.n, state.defP, state.defE);
   render(); save();
   log('🔄 Réinitialisation : économie et carte remises à zéro.');
 }
 
+<<<<<<< HEAD
+// Events
+document.getElementById('buyPeasant').addEventListener('click', buyPeasant);
+document.getElementById('buyFootman').addEventListener('click', ()=>{
+  if(Math.floor(state.bronze/BRONZE_PER_OR) >= 10){
+    state.bronze -= 10*BRONZE_PER_OR;
+=======
 // ======= Events =======
 el.buyP.addEventListener('click', buyPeasant);
 el.buyF.addEventListener('click', ()=>{
   if(spend(10)){
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
     state.footmen = (state.footmen||0)+1;
     log('🛡️ +1 fantassin (tentative de capture à la fin du tour).');
     render(); save();
   }
 });
+<<<<<<< HEAD
+document.getElementById('unlockFarm').addEventListener('click', unlockFarm);
+document.getElementById('stepBtn')?.addEventListener('click', endTurn);
+document.getElementById('resetBtn')?.addEventListener('click', hardReset);
+document.getElementById('resizeBtn')?.addEventListener('click', ()=>{
+  let n = parseInt(document.getElementById('sizeInput').value||'10',10);
+  n = Math.max(7, Math.min(25, n));
+=======
 el.unlockFarm.addEventListener('click', unlockFarm);
 el.step.addEventListener('click', endTurn);
 el.reset.addEventListener('click', hardReset);
 el.resizeBtn.addEventListener('click', ()=>{
   let n = parseInt(el.sizeInput.value||'10',10);
   n = clamp(n,7,25);
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   state.n = n;
   state.board = newBoard(n);
   state.hp = newHP(n, state.defP, state.defE);
@@ -471,18 +901,30 @@ el.resizeBtn.addEventListener('click', ()=>{
   render(); save();
   log(`🗺️ Nouvelle grille ${n}×${n}.`);
 });
+<<<<<<< HEAD
+document.getElementById('victoryMode')?.addEventListener('change', (e)=>{
+  state.victoryMode = e.target.value;
+=======
 el.victory.addEventListener('change', ()=>{
   state.victoryMode = el.victory.value;
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   save();
   log(`⚑ Condition de victoire: ${state.victoryMode==='castle'?'Siège (château)':'Hégémonie (contrôle)'}.
 `);
 });
+<<<<<<< HEAD
+document.getElementById('toggleLog')?.addEventListener('click', ()=>{
+=======
 el.toggleLog.addEventListener('click', ()=>{
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
   state.logCollapsed = !state.logCollapsed;
   render(); save();
 });
 
+<<<<<<< HEAD
+=======
 // ======= Init =======
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 (function init(){
   if(!load()){
     state.board = newBoard(state.n);
@@ -492,6 +934,15 @@ el.toggleLog.addEventListener('click', ()=>{
     updateFarmsFilled();
     render();
   }
+<<<<<<< HEAD
+  setInterval(tickEconomy, 1000);
+  render();
+})();
+
+})();
+</script>
+
+=======
   // Tick économie (1 s) — pas de pause
   setInterval(tickEconomy, 1000);
   // Rendu initial
@@ -499,5 +950,6 @@ el.toggleLog.addEventListener('click', ()=>{
 })();
 })();
 </script>
+>>>>>>> 69d7f201667e4c7229f3d4862e5090e41b8c0dcc
 </body>
 </html>
