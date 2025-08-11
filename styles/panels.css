@@ -1,0 +1,18 @@
+.building-card{ background:#171a21; border:1px solid #2a3245; border-radius:10px; padding:10px; margin-bottom:12px }
+.building-name{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:bold }
+.prod-bar{ height:8px; background:#0f1420; border-radius:5px; overflow:hidden; margin-top:6px }
+.prod-fill{ height:100%; background:var(--accent-2); width:0% }
+.prod-fill.consume{ background:var(--violet); width:100%; transform-origin:right; transform:scaleX(0) }
+.muted{color:var(--muted); font-size:13px}
+.small{font-size:12px; color:#8b95a8}
+.build-card{ padding:12px; border:1px solid #2a3245; border-radius:10px; margin-bottom:12px }
+.build-head{ display:flex; align-items:center; gap:8px; font-weight:700 }
+.build-desc{ font-size:12px; color:var(--muted) }
+.build-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.build-bar{ height:8px; background:#0f1420; border-radius:5px; overflow:hidden }
+.build-fill{ height:100%; background:var(--accent); width:0% }
+.gold-float{
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  font-size:14px; color:gold; opacity:0; animation:floatUp 1s ease forwards;
+}
+@keyframes floatUp{ 0%{opacity:0; transform:translate(-50%,0)} 30%{opacity:1} 100%{opacity:0; transform:translate(-50%,-20px)} }

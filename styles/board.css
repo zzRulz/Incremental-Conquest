@@ -1,0 +1,11 @@
+.board-wrap{padding:14px}
+.board{display:grid; gap:6px; justify-content:center}
+.cell{
+  width:var(--tile); height:var(--tile); border-radius:9px; display:grid; place-items:center;
+  font-size:22px; user-select:none; border:1px solid #1f2635; background:#0f1420; position: relative;
+}
+.cell.center.glow { animation: glowPulse 1s ease-in-out infinite; }
+@keyframes glowPulse { 0%,100%{ box-shadow:0 0 6px var(--accent)} 50%{ box-shadow:0 0 14px var(--accent)} }
+.cell.chateau { font-size:20px; animation: appearZoom .8s ease forwards; }
+@keyframes appearZoom { 0%{transform:scale(.5);opacity:0} 100%{transform:scale(1);opacity:1} }
+.cell.fog{ filter:grayscale(1) brightness(0.6); opacity:0.6; pointer-events:none }
