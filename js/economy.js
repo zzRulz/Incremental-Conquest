@@ -1,8 +1,10 @@
-import { state, setState } from './state.js';
 import { CONFIG } from './config.js';
+import { state, setState } from './state.js';
 export function recalcIncome(){
-  // income = castleLevel - 0.5 * houses
-  const income = (state.castleBuilt ? state.castleLevel : 0) - (CONFIG.HOUSE.upkeepPerTick * state.houses);
+  const castle = state.castleBuilt ? state.castleLevel : 0;
+  const fields = state.fields * CONFIG.FIELD.goldPerTick;
+  const houses = state.houses * CONFIG.HOUSE.upkeepPerTick;
+  const income = (castle + fields - houses) * (1 + 0.05*state.prestige);
   setState({ incomePerTick: round2(income) });
 }
 function round2(x){ return Math.round(x*100)/100; }

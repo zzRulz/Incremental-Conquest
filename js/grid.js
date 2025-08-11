@@ -1,15 +1,16 @@
 import { CONFIG } from './config.js';
 import { state } from './state.js';
+
 const board = document.getElementById('board');
 const zoneRSpan = document.getElementById('zoneR');
 let cols, rows, centerR, centerC;
+
 export function initGrid(){
   cols = CONFIG.GRID.cols; rows = CONFIG.GRID.rows;
   centerR = Math.floor(rows/2); centerC = Math.floor(cols/2);
   board.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
   board.style.gridTemplateRows = `repeat(${rows}, var(--tile))`;
   board.innerHTML = '';
-  // draw cells
   for (let r=0;r<rows;r++){
     for (let c=0;c<cols;c++){
       const cell = document.createElement('div');
@@ -21,19 +22,17 @@ export function initGrid(){
     }
   }
   zoneRSpan.textContent = String(state.zoneRadius);
-  // repaint from saved state
   repaintFromState();
 }
-export function idx(r,c){ return r*cols + c; }
+
+export function idx(r,c){ return r*cols+c; }
 export function isConstructible(r,c){
   const d = Math.abs(r-centerR)+Math.abs(c-centerC);
   return d <= state.zoneRadius;
 }
 export function getCenterCell(){ return document.getElementById('centerCell'); }
 export function getCellByIndex(i){ return board.children[i]; }
-export function occupy(index){
-  if (!state.occupied.includes(index)) state.occupied.push(index);
-}
+export function occupy(index){ if(!state.occupied.includes(index)) state.occupied.push(index); }
 export function isOccupied(index){ return state.occupied.includes(index); }
 export function getRandomFreeCell(avoidCenter=true){
   const free=[];
@@ -53,27 +52,32 @@ export function placeEmoji(index, emoji, className){
   cell.classList.add(className);
   cell.textContent = emoji;
 }
-export function repaintFromState(){
-  // clear classes/texts except fog and center
-  for(let i=0;i<board.children.length;i++){
-    const el = board.children[i];
-    el.className = 'cell' + (el.id==='centerCell' ? ' center' : '');
-    el.textContent = '';
+export function clearBoard(){
+  state.occupied = [];
+  state.housePositions=[]; state.fieldPositions=[]; state.campPositions=[]; state.minePositions=[];
+  const nodes=board.children;
+  for(let i=0;i<nodes.length;i++){
+    const el=nodes[i];
+    el.className='cell';
+    el.textContent='';
     const r=Math.floor(i/cols), c=i%cols;
-    if (!isConstructible(r,c)) el.classList.add('fog');
-    if (el.id==='centerCell') el.classList.add('glow');
+    if(r===centerR && c===centerC){ el.classList.add('center','glow'); el.id='centerCell'; }
+    else el.removeAttribute('id');
+    if(!isConstructible(r,c)) el.classList.add('fog');
   }
+}
+export function repaintFromState(){
+  clearBoard();
+  // trees & rocks
+  state.treePositions.forEach(i=>{ placeEmoji(i,'🌳','tree'); occupy(i); });
+  state.rockPositions.forEach(i=>{ placeEmoji(i,'🪨','rock'); occupy(i); });
   // castle
-  if (state.castleBuilt){
-    const cc = getCenterCell();
-    cc.classList.remove('glow');
-    cc.classList.add('chateau');
-    cc.textContent = '🏰';
-    occupy(idx(centerR,centerC));
+  if(state.castleBuilt){
+    const cc=getCenterCell(); cc.classList.remove('glow'); cc.classList.add('chateau'); cc.textContent='🏰'; occupy(idx(centerR,centerC));
   }
-  // houses
-  state.housePositions.forEach(i=>{
-    placeEmoji(i,'🏠','house');
-    occupy(i);
-  });
+  // buildings
+  state.housePositions.forEach(i=>{ placeEmoji(i,'🏠','house'); occupy(i); });
+  state.fieldPositions.forEach(i=>{ placeEmoji(i,'🌾','field'); occupy(i); });
+  state.campPositions.forEach(i=>{ placeEmoji(i,'🪓','camp'); occupy(i); });
+  state.minePositions.forEach(i=>{ placeEmoji(i,'⛏️','mine'); occupy(i); });
 }
