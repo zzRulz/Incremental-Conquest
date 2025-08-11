@@ -1,1 +1,503 @@
-<PASTE THE HTML CONTENT FROM THE LAST MESSAGE HERE>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Châteaux & Champs – Incremental (v5)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --muted:#9aa4b2; --text:#e6e8eb;
+    --accent:#6ee7ff; --accent-2:#7cfe9a; --danger:#ff7a7a;
+    --tile:42px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial; background:#0f1115; color:var(--text)}
+  header{
+    padding:14px 18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    border-bottom:1px solid #222833; background:#111520; position:sticky; top:0; z-index:5
+  }
+  header h1{font-size:18px; margin:0 10px 0 0}
+  .btn{border:1px solid #2a3245; background:#161a22; color:var(--text); padding:10px 14px; border-radius:10px; cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#1a2330,#17202b)}
+  .btn[disabled]{opacity:.45; cursor:not-allowed}
+  .stat{min-width:120px; padding:8px 12px; border:1px solid #2a3245; border-radius:12px; background:#141923; text-align:center}
+  .layout{display:grid; grid-template-columns: 1fr 360px; gap:18px; padding:18px; max-width:1200px; margin:0 auto}
+  @media (max-width: 980px){ .layout{grid-template-columns:1fr} }
+  .card{padding:14px; border:1px solid #283043; border-radius:14px; background:#121720}
+  .card h3{margin:0 0 10px 0; font-size:15px; color:#d6d9df}
+  .muted{color:var(--muted); font-size:13px}
+  .small{font-size:12px; color:#8b95a8}
+
+  /* Board */
+  .board-wrap{border:1px solid #263044; border-radius:14px; padding:14px; background:#121720}
+  .board{display:grid; gap:6px; justify-content:center}
+  .cell{
+    width:var(--tile); height:var(--tile); border-radius:9px; display:grid; place-items:center;
+    font-size:22px; user-select:none; border:1px solid #1f2635;
+    background:#0f1420; transition:background .2s ease
+  }
+  .player{background:linear-gradient(160deg,#0e3b1c,#0a2914); border-color:#1c3a28}
+  .enemy{background:linear-gradient(160deg,#3b1212,#2a0c0c); border-color:#3a1f23}
+
+  /* Farms incremental */
+  .farm-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:6px}
+  .farm{
+    height:44px; border:1px dashed #33405a; border-radius:8px; display:grid; place-items:center; font-size:18px; color:#9fb3c8;
+    background:#0f1420;
+  }
+  .farm.open{border-style:solid; color:#b9c7d9}
+  .farm.filled{border-style:solid; background:linear-gradient(180deg,#12211a,#0f1b15); color:#7cfe9a}
+  .log-head{display:flex; align-items:center; justify-content:space-between}
+  .link{cursor:pointer; color:#9aa4b2; text-decoration:underline; font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Châteaux & Champs</h1>
+  <div class="stat" id="goldStat">Or: 0</div>
+  <div class="stat" id="incomeStat">Prod: 0 or / 10 s</div>
+  <div class="stat" id="turnStat" title="Tours (pour la partie conquête)">Tour: 0</div>
+  <div style="margin-left:auto; display:flex; gap:8px">
+    <select class="btn" id="victoryMode" title="Condition de victoire (si tu joues les tours)">
+      <option value="castle" selected>Victoire: Siège</option>
+      <option value="total">Victoire: Hégémonie</option>
+    </select>
+    <button class="btn primary" id="stepBtn" title="Fin du tour (système conquête)">⏭ Fin du tour</button>
+    <button class="btn" id="resetBtn">⟲ Reset</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- LEFT: MAP -->
+  <section class="board-wrap">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+      <div class="muted">Carte (conquête via <b>fantassins</b>, économie en temps réel)</div>
+      <div class="muted">Grille: <span id="gridSizeLabel">10×10</span></div>
+    </div>
+    <div id="board" class="board" role="grid" aria-label="Plateau"></div>
+    <div class="small" style="margin-top:8px; color:#9aa4b2">
+      🏰 Ton château (milieu droit) • 🏯 Château IA (milieu gauche)
+    </div>
+  </section>
+
+  <!-- RIGHT: ECONOMY -->
+  <aside style="display:grid; gap:14px; height:fit-content">
+    <div class="card">
+      <h3>Fermes & paysans</h3>
+      <div class="muted small" style="margin-bottom:8px">
+        1 <b>paysan</b> cultivant 1 <b>ferme</b> produit <b>+1 or / 10 s</b>. <br/>Départ : 1 ferme ouverte sur 9.
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
+        <button class="btn" id="buyPeasant">Acheter paysan (5 or)</button>
+        <button class="btn" id="unlockFarm">Déverrouiller une ferme (5 or)</button>
+        <span class="small muted" id="peasantCount">0 paysan</span>
+      </div>
+      <div class="muted small" style="margin:8px 0 6px">Fermes (max 9)</div>
+      <div id="farmGrid" class="farm-grid"></div>
+      <div class="small muted" style="margin-top:6px">Prod actuelle : <b id="prodNow">0</b> or / 10 s</div>
+    </div>
+
+    <div class="card">
+      <h3>Armée (optionnel)</h3>
+      <div class="muted small" style="margin-bottom:8px">
+        Les <b>fantassins</b> tentent des captures à la fin de chaque tour. L’économie tourne en continu.
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px">
+        <button class="btn" id="buyFootman">Acheter fantassin (10 or)</button>
+        <span class="small muted" id="footmanCount">0 fantassin</span>
+      </div>
+      <div class="small muted">Proba capture: neutre 65% • vs IA 40%</div>
+    </div>
+
+    <div class="card">
+      <h3>Paramètres</h3>
+      <label class="small muted">Taille de la grille</label>
+      <div style="display:flex; gap:8px">
+        <input id="sizeInput" type="number" min="7" max="25" value="10" class="btn" style="width:100%">
+        <button class="btn" id="resizeBtn">Redimensionner</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="log-head">
+        <h3>Journal</h3>
+        <span id="toggleLog" class="link">Réduire</span>
+      </div>
+      <div id="logBox" class="small" style="white-space:pre-wrap; color:#9aa4b2; min-height:120px; max-height:220px; overflow:auto">—</div>
+    </div>
+  </aside>
+</main>
+
+<script>
+(()=>{
+// ======= Constantes & helpers =======
+const CELL = { NEUTRAL:0, PLAYER:1, ENEMY:2 };
+const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+const SAVE_KEY = 'inc_v5';
+
+// Économie
+const BRONZE_PER_OR = 100;      // 1 or = 100 bronze
+const BRONZE_PER_FARM_PER_SEC = 10; // 0.1 or/s = 10 bronze/s
+const FARM_MAX = 9;
+const FARM_UNLOCK_COSTS = [5,20,60,150,400,1000,2500,6000]; // 8 déverrouillages
+const PEASANT_BASE_COST = 5;
+const PEASANT_INFLATION = 1.15;
+
+// Outils
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function inb(n,x,y){ return x>=0 && x<n && y>=0 && y<n; }
+function neighbors(n,x,y){
+  const out=[]; for(const [dx,dy] of DIRS){ const nx=x+dx,ny=y+dy; if(inb(n,nx,ny)) out.push([nx,ny]); } return out;
+}
+function orFromBronze(b){ return Math.floor(b/BRONZE_PER_OR); }
+
+// ======= État =======
+const state = {
+  // Carte (on garde ta base)
+  n: 10,
+  board: [],
+  hp: [],
+  turn: 0,
+  castles: {player:[0,0], enemy:[0,0]},
+  victoryMode: 'castle',
+  pNeutral: 0.65,
+  pEnemy:   0.40,
+  defP: 1, defE: 2,
+
+  // Économie temps réel (nouveau)
+  bronze: 0,           // stock interne
+  peasants: 0,
+  peasantCost: PEASANT_BASE_COST, // en or
+  farmsOpen: 1,        // 1 ouverte au départ
+  farmsFilled: 0,      // auto = min(farmsOpen, peasants)
+  logs: [],            // journal (max 10)
+  logCollapsed: false
+};
+
+// ======= Génération de carte (inchangée) =======
+function newBoard(n){
+  const B = Array.from({length:n}, _ => Array(n).fill(CELL.NEUTRAL));
+  const mid = Math.floor(n/2);
+  state.castles.enemy  = [mid, 0];
+  state.castles.player = [mid, n-1];
+  const [ex,ey] = state.castles.enemy;
+  const [px,py] = state.castles.player;
+  B[ex][ey] = CELL.ENEMY;
+  B[px][py] = CELL.PLAYER;
+  return B;
+}
+function newHP(n, defP, defE){
+  const H = Array.from({length:n}, _ => Array(n).fill(1));
+  const [ex,ey] = state.castles.enemy;
+  const [px,py] = state.castles.player;
+  H[px][py] = Math.max(defP, defP+1);
+  H[ex][ey] = Math.max(defE, defE+1);
+  return H;
+}
+
+// ======= Conquête (identique à ta base) =======
+function countCells(who){ let c=0; for(const r of state.board) for(const v of r) if(v===who) c++; return c; }
+function frontierFor(who){
+  const n=state.n, seen=new Set(), out=[];
+  for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+    if(state.board[i][j]!==who) continue;
+    for(const [nx,ny] of neighbors(n,i,j)){
+      if(state.board[nx][ny]!==who){
+        const k=nx+','+ny;
+        if(!seen.has(k)){ seen.add(k); out.push([nx,ny]); }
+      }
+    }
+  }
+  return out;
+}
+function playerAutoConquer(){
+  const attempts = state.footmen||0;
+  if(attempts<=0) return 0;
+  const front = frontierFor(CELL.PLAYER);
+  if(front.length===0) return 0;
+  let caps=0;
+  for(let k=0;k<attempts;k++){
+    if(front.length===0) break;
+    const [x,y] = front[Math.floor(Math.random()*front.length)];
+    const target = state.board[x][y];
+    const p = (target===CELL.NEUTRAL)?state.pNeutral:state.pEnemy;
+    if(Math.random() < p){
+      state.hp[x][y] = Math.max(0, (state.hp[x][y]||1)-1);
+      if(state.hp[x][y]===0){
+        state.board[x][y]=CELL.PLAYER;
+        state.hp[x][y]=state.defP;
+        caps++;
+      }
+    }
+  }
+  return caps;
+}
+function enemyAutoExpand(){
+  const enemyCount = countCells(CELL.ENEMY);
+  if(enemyCount < 5) return 0;
+  const front = frontierFor(CELL.ENEMY);
+  if(front.length===0) return 0;
+  let caps=0;
+  const [x,y] = front[Math.floor(Math.random()*front.length)];
+  const p = (state.board[x][y]===CELL.NEUTRAL)?0.55:0.35;
+  if(Math.random()<p){
+    state.hp[x][y] = Math.max(0, (state.hp[x][y]||1)-1);
+    if(state.hp[x][y]===0){
+      state.board[x][y]=CELL.ENEMY;
+      state.hp[x][y]=state.defE;
+      caps++;
+    }
+  }
+  return caps;
+}
+function endTurn(){
+  state.turn++;
+  const p = playerAutoConquer();
+  const e = enemyAutoExpand();
+
+  if(state.victoryMode==='castle'){
+    const [ex,ey] = state.castles.enemy;
+    const [px,py] = state.castles.player;
+    if(state.board[ex][ey] === CELL.PLAYER){ log(`🎉 Victoire (château ennemi) au tour ${state.turn}`); }
+    if(state.board[px][py] !== CELL.PLAYER){ log(`💀 Défaite (ton château est tombé) au tour ${state.turn}`); }
+  }else{
+    const tot = state.n*state.n, me=countCells(CELL.PLAYER);
+    if(me===tot) log(`🎉 Victoire par hégémonie au tour ${state.turn}`);
+    if(me===0)   log(`💀 Défaite : plus de territoire au tour ${state.turn}`);
+  }
+
+  log(`Tour ${state.turn}: captures → toi ${p}, IA ${e}`);
+  render(); save();
+}
+
+// ======= Économie temps réel =======
+function currentFarmsFilled(){
+  return Math.min(state.farmsOpen, state.peasants);
+}
+function currentProdBronzePerSec(){
+  return currentFarmsFilled() * BRONZE_PER_FARM_PER_SEC;
+}
+function canAfford(orCost){
+  return orFromBronze(state.bronze) >= orCost;
+}
+function spend(orCost){
+  if(!canAfford(orCost)) return false;
+  state.bronze -= orCost * BRONZE_PER_OR;
+  return true;
+}
+function buyPeasant(){
+  const cost = state.peasantCost;
+  if(!spend(cost)) return false;
+  state.peasants += 1;
+  state.peasantCost = Math.ceil(state.peasantCost * PEASANT_INFLATION);
+  log(`👨‍🌾 +1 paysan (coût prochain: ${state.peasantCost} or)`);
+  updateFarmsFilled();
+  render(); save();
+  return true;
+}
+function nextUnlockCost(){
+  // 1 ouverte au départ → index 0 pour la 2e, ... jusqu'à 9
+  const open = state.farmsOpen;
+  if(open >= FARM_MAX) return null;
+  return FARM_UNLOCK_COSTS[open-1];
+}
+function unlockFarm(){
+  const cost = nextUnlockCost();
+  if(cost==null) return false;
+  if(!spend(cost)) return false;
+  state.farmsOpen = clamp(state.farmsOpen+1, 1, FARM_MAX);
+  log(`🗝️ Nouvelle ferme ouverte (${state.farmsOpen}/${FARM_MAX}).`);
+  updateFarmsFilled();
+  render(); save();
+  return true;
+}
+function updateFarmsFilled(){
+  state.farmsFilled = currentFarmsFilled();
+}
+function tickEconomy(){
+  // Pas de pause, pas d'offline : tick chaque seconde
+  const inc = currentProdBronzePerSec();
+  if(inc>0){
+    state.bronze += inc;
+    renderMoneyOnly();
+  }
+}
+
+// ======= UI =======
+const el = {
+  board: document.getElementById('board'),
+  gold: document.getElementById('goldStat'),
+  income: document.getElementById('incomeStat'),
+  turn: document.getElementById('turnStat'),
+  step: document.getElementById('stepBtn'),
+  reset: document.getElementById('resetBtn'),
+  buyP: document.getElementById('buyPeasant'),
+  buyF: document.getElementById('buyFootman'),
+  pCount: document.getElementById('peasantCount'),
+  farmGrid: document.getElementById('farmGrid'),
+  sizeInput: document.getElementById('sizeInput'),
+  resizeBtn: document.getElementById('resizeBtn'),
+  gridSizeLabel: document.getElementById('gridSizeLabel'),
+  log: document.getElementById('logBox'),
+  victory: document.getElementById('victoryMode'),
+  unlockFarm: document.getElementById('unlockFarm'),
+  prodNow: document.getElementById('prodNow'),
+  toggleLog: document.getElementById('toggleLog'),
+};
+
+function renderBoard(){
+  const n = state.n;
+  el.board.style.gridTemplateColumns = `repeat(${n}, var(--tile))`;
+  el.board.innerHTML='';
+  for(let i=0;i<n;i++){
+    for(let j=0;j<n;j++){
+      const v = state.board[i][j];
+      const d = document.createElement('div');
+      d.className = 'cell ' + (v===CELL.NEUTRAL?'neutral':v===CELL.PLAYER?'player':'enemy');
+      const isPC = (i===state.castles.player[0] && j===state.castles.player[1]);
+      const isEC = (i===state.castles.enemy[0]  && j===state.castles.enemy[1]);
+      d.textContent = (v===CELL.NEUTRAL)?'🏳':(v===CELL.PLAYER?(isPC?'🏰':'🟩'):(isEC?'🏯':'🟥'));
+      d.title = `PV: ${state.hp[i]?.[j] ?? 1}`;
+      el.board.appendChild(d);
+    }
+  }
+}
+
+function renderFarms(){
+  el.farmGrid.innerHTML='';
+  const filled = currentFarmsFilled();
+  const open = state.farmsOpen;
+  for(let i=0;i<FARM_MAX;i++){
+    const f = document.createElement('div');
+    let cls = 'farm';
+    if(i<filled){ cls+=' filled'; f.textContent='🌾'; }
+    else if(i<open){ cls+=' open'; f.textContent='▢'; }
+    else { f.textContent='🔒'; }
+    f.className = cls;
+    el.farmGrid.appendChild(f);
+  }
+  const idle = Math.max(0, state.peasants - open);
+  const active = Math.min(state.peasants, open);
+  el.pCount.textContent = `${state.peasants} paysan${state.peasants>1?'s':''} (${active} actifs, ${idle} en attente)`;
+  el.prodNow.textContent = String(filled); // or/10s
+}
+
+function renderMoneyOnly(){
+  const or = orFromBronze(state.bronze);
+  el.gold.textContent = `Or: ${or}`;
+  el.income.textContent = `Prod: ${currentFarmsFilled()} or / 10 s`;
+}
+
+function render(){
+  renderMoneyOnly();
+  el.turn.textContent = `Tour: ${state.turn}`;
+  el.victory.value = state.victoryMode;
+  renderBoard();
+  renderFarms();
+  // Boutons & coûts
+  el.buyP.textContent = `Acheter paysan (${state.peasantCost} or)`;
+  const nxt = nextUnlockCost();
+  el.unlockFarm.textContent = `Déverrouiller une ferme${nxt!=null?` (${nxt} or)`:''}`;
+  el.unlockFarm.disabled = (nxt==null) || !canAfford(nxt);
+  el.buyP.disabled = !canAfford(state.peasantCost);
+  el.buyF.disabled = !canAfford(10);
+  el.gridSizeLabel.textContent = `${state.n}×${state.n}`;
+  // Journal
+  el.log.textContent = (state.logs.length? state.logs.slice(-10).join('\n') : '—');
+  el.log.style.display = state.logCollapsed ? 'none' : 'block';
+  el.toggleLog.textContent = state.logCollapsed ? 'Déplier' : 'Réduire';
+}
+
+function log(msg){
+  const t = new Date().toLocaleTimeString();
+  state.logs.push(`[${t}] ${msg}`);
+  if(state.logs.length>1000) state.logs.splice(0, state.logs.length-1000);
+  render();
+}
+
+// ======= Save / Load / Reset =======
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    Object.assign(state, s);
+    // garde-fous
+    if(!state.board || state.board.length!==state.n){ state.board = newBoard(state.n); }
+    if(!state.hp || state.hp.length!==state.n){ state.hp = newHP(state.n, state.defP, state.defE); }
+    state.farmsOpen = clamp(state.farmsOpen||1,1,FARM_MAX);
+    state.peasantCost = Math.max(PEASANT_BASE_COST, state.peasantCost||PEASANT_BASE_COST);
+    updateFarmsFilled();
+    return true;
+  }catch(e){ return false; }
+}
+function hardReset(){
+  const keepN = state.n;
+  const keepCastles = state.castles;
+  Object.assign(state, {
+    n: keepN, board:newBoard(keepN), hp:[], turn:0,
+    castles: keepCastles, victoryMode: state.victoryMode,
+    pNeutral:0.65, pEnemy:0.40, defP:1, defE:2,
+    bronze:0, peasants:0, peasantCost:PEASANT_BASE_COST,
+    farmsOpen:1, farmsFilled:0, logs:[], logCollapsed:false
+  });
+  state.hp = newHP(state.n, state.defP, state.defE);
+  render(); save();
+  log('🔄 Réinitialisation : économie et carte remises à zéro.');
+}
+
+// ======= Events =======
+el.buyP.addEventListener('click', buyPeasant);
+el.buyF.addEventListener('click', ()=>{
+  if(spend(10)){
+    state.footmen = (state.footmen||0)+1;
+    log('🛡️ +1 fantassin (tentative de capture à la fin du tour).');
+    render(); save();
+  }
+});
+el.unlockFarm.addEventListener('click', unlockFarm);
+el.step.addEventListener('click', endTurn);
+el.reset.addEventListener('click', hardReset);
+el.resizeBtn.addEventListener('click', ()=>{
+  let n = parseInt(el.sizeInput.value||'10',10);
+  n = clamp(n,7,25);
+  state.n = n;
+  state.board = newBoard(n);
+  state.hp = newHP(n, state.defP, state.defE);
+  state.turn = 0;
+  render(); save();
+  log(`🗺️ Nouvelle grille ${n}×${n}.`);
+});
+el.victory.addEventListener('change', ()=>{
+  state.victoryMode = el.victory.value;
+  save();
+  log(`⚑ Condition de victoire: ${state.victoryMode==='castle'?'Siège (château)':'Hégémonie (contrôle)'}.
+`);
+});
+el.toggleLog.addEventListener('click', ()=>{
+  state.logCollapsed = !state.logCollapsed;
+  render(); save();
+});
+
+// ======= Init =======
+(function init(){
+  if(!load()){
+    state.board = newBoard(state.n);
+    state.hp = newHP(state.n, state.defP, state.defE);
+    log("Bienvenue ! Ouvre des fermes et achète des paysans pour produire de l'or.");
+  }else{
+    updateFarmsFilled();
+    render();
+  }
+  // Tick économie (1 s) — pas de pause
+  setInterval(tickEconomy, 1000);
+  // Rendu initial
+  render();
+})();
+})();
+</script>
+</body>
+</html>
