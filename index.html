@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Châteaux & Champs – Lite (phase 1.1)</title>
+  <title>Châteaux & Champs – Phase 2</title>
   <link rel="icon" href="assets/favicon.svg" />
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/theme-dark.css" />
@@ -14,7 +14,8 @@
 <header>
   <h1>Châteaux & Champs</h1>
   <div class="stat">Or: <span id="gold">0</span></div>
-  <div class="stat small">💰 Revenu / tick : <span id="income" class="neu">0</span></div>
+  <div class="stat">Pop: <span id="pop">0</span></div>
+  <div class="stat small">💰 /tick: <span id="income" class="neu">0</span></div>
   <div class="mode">
     <button id="modeBtn" class="btn">Mode: Debug (2s)</button>
     <button id="soundBtn" class="btn">🔊 Son: ON</button>
@@ -22,24 +23,39 @@
 </header>
 
 <main class="layout">
+  <!-- Gauche : groupé -->
   <aside id="leftPanel"></aside>
 
+  <!-- Centre : Grille -->
   <section class="board-wrap">
     <div class="topbar">
-      <div class="muted">Carte (zone circulaire)</div>
+      <div class="muted">Zone circulaire</div>
       <div class="muted">Grille: <span id="gridSizeLabel">15×11</span> • Rayon: <span id="zoneR">2</span></div>
     </div>
     <div id="board" class="board" role="grid" aria-label="Plateau"></div>
   </section>
 
+  <!-- Droite : Construction -->
   <aside id="rightPanel">
+    <!-- Château -->
     <div class="build-card" id="castleCard">
-      <div class="build-head">🏰 Château</div>
-      <div class="build-desc">Temps 10s • Lance la production : <b>+1 or / tick</b></div>
+      <div class="build-head" id="castleHead">🏰 Château (Niv. 1)</div>
+      <div class="build-desc" id="castleDesc">Construction initiale: 10s • Prod: <b>+1 or/tick</b> • Limite maisons: <b id="houseLimitLabel">1</b></div>
       <div class="build-bar"><div class="build-fill" id="castleFill"></div></div>
-      <div class="build-actions">
+      <div class="build-actions" id="castleActions">
         <button class="btn primary" id="buildCastleBtn">Construire</button>
-        <span class="small muted" id="castleMsg">Clique pour construire le château au centre</span>
+        <span class="small muted" id="castleMsg">—</span>
+      </div>
+    </div>
+
+    <!-- Maison -->
+    <div class="build-card" id="houseCard" style="display:none">
+      <div class="build-head">🏠 Maison</div>
+      <div class="build-desc">Coût <b>5 or</b> • 5s • +2 pop • Entretien <b>−0,5 or/tick</b></div>
+      <div class="build-bar"><div class="build-fill" id="houseFill"></div></div>
+      <div class="build-actions">
+        <button class="btn" id="buildHouseBtn">Construire</button>
+        <span class="small muted" id="houseMsg">—</span>
       </div>
     </div>
   </aside>

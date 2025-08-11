@@ -3,11 +3,16 @@ import { state, setState } from './state.js';
 export function save(){
   const data = {
     gold: state.gold,
+    pop: state.pop,
     zoneRadius: state.zoneRadius,
-    castleBuilt: state.castleBuilt,
-    incomePerTick: state.incomePerTick,
     mode: state.mode,
     muted: state.muted,
+    castleBuilt: state.castleBuilt,
+    castleLevel: state.castleLevel,
+    houses: state.houses,
+    incomePerTick: state.incomePerTick,
+    occupied: state.occupied,
+    housePositions: state.housePositions,
     v: 1
   };
   try{ localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(data)); }catch(e){}
