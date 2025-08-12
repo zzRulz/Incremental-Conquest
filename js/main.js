@@ -5,8 +5,9 @@ import { initGrid, repaintFromState } from './grid.js';
 import { initUI } from './ui.js';
 import { initBuildings } from './buildings.js';
 import { startTimers } from './timers.js';
-import { upsertCastleCard, upsertHousesCard, upsertFieldsCard, upsertCampsCard, upsertMinesCard } from './panel.js';
+import { refreshAll } from './panel.js';
 import { placeNaturalResources } from './resources.js';
+import { initPrestige } from './prestige.js';
 
 window.addEventListener('beforeunload', ()=>{
   try{ localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(state)); }catch(_){}
@@ -14,11 +15,13 @@ window.addEventListener('beforeunload', ()=>{
 
 (function start(){
   load();
+  setState({ woodCap: CONFIG.STORAGE.woodCap, stoneCap: CONFIG.STORAGE.stoneCap });
   initGrid();
   initUI();
   initBuildings();
+  initPrestige();
   placeNaturalResources();
   repaintFromState();
-  upsertCastleCard(); upsertHousesCard(); upsertFieldsCard(); upsertCampsCard(); upsertMinesCard();
+  refreshAll();
   startTimers();
 })();

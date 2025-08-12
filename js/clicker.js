@@ -1,6 +1,6 @@
 import { CONFIG } from './config.js';
 import { state, setState } from './state.js';
-import { upsertCastleCard, upsertFieldsCard, upsertCampsCard, upsertMinesCard, refreshStaminaBars } from './panel.js';
+import { refreshAll } from './panel.js';
 
 let holdMap = new Map(); // key = index, value = timeStart
 
@@ -8,35 +8,28 @@ function perClick(kind){
   const base = CONFIG.CLICK.base[kind] || 0;
   const level = (kind==='castle') ? state.castleLevel : (state.levels[kind]||1);
   const lvlBonus = 1 + (CONFIG.CLICK.levelBonusPct/100) * (level-1);
-  return base * lvlBonus;
+  return base * lvlBonus * state.globalMult;
 }
 function spendStamina(kind){
   const cost = CONFIG.CLICK.staminaCost;
   state.stamina[kind] = Math.max(0, (state.stamina[kind]||0) - cost);
-  refreshStaminaBars();
+  refreshAll();
 }
-function showFloat(i, text, crit=false, depleted=false){
+function showFloat(i, text, cls=''){
   const board = document.getElementById('board');
   const el = board.children[i];
   const span = document.createElement('div');
-  span.className = 'float-num' + (crit?' crit':'') + (depleted?' depleted':'');
+  span.className = 'float-num ' + cls;
   span.textContent = text;
   el.appendChild(span);
   setTimeout(()=>{ span.remove(); }, 900);
 }
-
 function chargeRing(i, on){
   const board = document.getElementById('board');
   const el = board.children[i];
   let ring = el.querySelector('.charge-ring');
-  if(on){
-    if(!ring){
-      ring = document.createElement('div'); ring.className='charge-ring';
-      el.appendChild(ring);
-    }
-  } else {
-    if(ring) ring.remove();
-  }
+  if(on){ if(!ring){ ring = document.createElement('div'); ring.className='charge-ring'; el.appendChild(ring); } }
+  else { if(ring) ring.remove(); }
 }
 
 export function handleClickDown(e){
@@ -59,24 +52,42 @@ export function handleClickUp(e){
 
   if(kind==='house' || kind==='tree' || kind==='rock') return;
 
-  const kindKey = (kind==='field'?'field': kind==='camp'?'camp': kind==='mine'?'mine':'castle');
-  const cost = CONFIG.CLICK.staminaCost;
-  if((state.stamina[kindKey]||0) < cost){
-    showFloat(idx, 'épuisé', false, true);
-    return;
-  }
+  // Hard stamina gate
+  const key = (kind==='field'||kind==='camp'||kind==='mine'||kind==='castle')?kind:(kind==='mill'?'mill':null);
+  if(key && (state.stamina[key]||0) < CONFIG.CLICK.staminaCost){ showFloat(idx, 'épuisé'); return; }
 
   let mult = 1;
   if(held >= CONFIG.CLICK.holdMs) mult *= CONFIG.CLICK.holdMult;
-  const crit = Math.random() < CONFIG.CLICK.critChance;
+  const crit = Math.random() < (CONFIG.CLICK.critChance + (state.achievements['critPlus']?0.02:0));
   if(crit) mult *= CONFIG.CLICK.critMult;
 
-  const per = perClick(kindKey) * mult;
+  if(kind==='castle'){
+    const v = perClick('castle') * mult;
+    setState({ gold: state.gold + v, totals: {...state.totals, gold: state.totals.gold + v }, clicks: {...state.clicks, castle: state.clicks.castle+1} });
+    showFloat(idx, `+${v.toFixed(2)} or`, crit?'crit':'');
+    spendStamina('castle');
+  } else if(kind==='field'){
+    const v = perClick('field') * mult;
+    setState({ wheat: state.wheat + v, totals: {...state.totals, wheat: state.totals.wheat + v }, clicks: {...state.clicks, field: state.clicks.field+1} });
+    showFloat(idx, `+${v.toFixed(2)} blé`, crit?'crit':'');
+    spendStamina('field');
+  } else if(kind==='camp'){
+    const v = perClick('camp') * mult;
+    setState({ wood: Math.min(state.woodCap, state.wood + v), totals: {...state.totals, wood: state.totals.wood + v }, clicks: {...state.clicks, camp: state.clicks.camp+1} });
+    showFloat(idx, `+${v.toFixed(2)} bois`, crit?'crit':'');
+    spendStamina('camp');
+  } else if(kind==='mine'){
+    const v = perClick('mine') * mult;
+    setState({ stone: Math.min(state.stoneCap, state.stone + v), totals: {...state.totals, stone: state.totals.stone + v }, clicks: {...state.clicks, mine: state.clicks.mine+1} });
+    showFloat(idx, `+${v.toFixed(2)} pierre`, crit?'crit':'');
+    spendStamina('mine');
+  } else if(kind==='mill'){
+    // convert 1 wheat -> 0.8 gold (if wheat available)
+    if(state.wheat < 1){ showFloat(idx, 'blé manquant'); return; }
+    const g = 0.8 * mult;
+    setState({ wheat: state.wheat - 1, gold: state.gold + g });
+    showFloat(idx, `-1 blé → +${g.toFixed(2)} or`);
+  }
 
-  if(kindKey==='castle'){ setState({ gold: state.gold + per }); upsertCastleCard(); showFloat(idx, `+${per.toFixed(2)} or`, crit); }
-  else if(kindKey==='field'){ setState({ wheat: state.wheat + per }); upsertFieldsCard(); showFloat(idx, `+${per.toFixed(2)} blé`, crit); }
-  else if(kindKey==='camp'){ setState({ wood: Math.min(state.woodCap, state.wood + per) }); upsertCampsCard(); showFloat(idx, `+${per.toFixed(2)} bois`, crit); }
-  else if(kindKey==='mine'){ setState({ stone: Math.min(state.stoneCap, state.stone + per) }); upsertMinesCard(); showFloat(idx, `+${per.toFixed(2)} pierre`, crit); }
-
-  spendStamina(kindKey);
+  refreshAll();
 }

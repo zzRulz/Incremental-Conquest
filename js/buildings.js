@@ -1,33 +1,23 @@
-import { CONFIG } from './config.js';
+import { CONFIG, bumpPatch } from './config.js';
 import { state, setState } from './state.js';
-import { getCenterCell, idx, occupy, getRandomFreeCell, placeEmoji } from './grid.js';
-import { upsertCastleCard, upsertHousesCard, upsertFieldsCard, upsertCampsCard, upsertMinesCard } from './panel.js';
+import { idx, getRandomFreeCell, placeEmoji } from './grid.js';
+import { refreshAll } from './panel.js';
 import { placeNaturalResources } from './resources.js';
 
-const castleFill = document.getElementById('castleFill');
-const buildCastleBtn = document.getElementById('buildCastleBtn');
-const castleMsg = document.getElementById('castleMsg');
-const castleActions = document.getElementById('castleActions');
+// Right panel elements
+const buildCastleBtn = document.getElementById('buildCastleBtn'); const castleFill = document.getElementById('castleFill'); const castleMsg = document.getElementById('castleMsg');
+const buildHouseBtn = document.getElementById('buildHouseBtn'); const houseFill = document.getElementById('houseFill'); const houseMsg = document.getElementById('houseMsg'); const houseCard = document.getElementById('houseCard');
+const buildFieldBtn = document.getElementById('buildFieldBtn'); const fieldFill = document.getElementById('fieldFill'); const fieldMsg = document.getElementById('fieldMsg'); const fieldCard = document.getElementById('fieldCard');
+const buildCampBtn = document.getElementById('buildCampBtn'); const campFill = document.getElementById('campFill'); const campMsg = document.getElementById('campMsg'); const campCard = document.getElementById('campCard');
+const buildMineBtn = document.getElementById('buildMineBtn'); const mineFill = document.getElementById('mineFill'); const mineMsg = document.getElementById('mineMsg'); const mineCard = document.getElementById('mineCard');
+const buildMillBtn = document.getElementById('buildMillBtn'); const millFill = document.getElementById('millFill'); const millMsg = document.getElementById('millMsg'); const millCard = document.getElementById('millCard');
+const buildWarehouseBtn = document.getElementById('buildWarehouseBtn'); const warehouseFill = document.getElementById('warehouseFill'); const warehouseMsg = document.getElementById('warehouseMsg'); const warehouseCard = document.getElementById('warehouseCard');
+const buildMarketBtn = document.getElementById('buildMarketBtn'); const marketFill = document.getElementById('marketFill'); const marketMsg = document.getElementById('marketMsg'); const marketCard = document.getElementById('marketCard');
+const marketUI = document.getElementById('marketUI');
 
-const houseCard = document.getElementById('houseCard');
-const buildHouseBtn = document.getElementById('buildHouseBtn');
-const houseFill = document.getElementById('houseFill');
-const houseMsg = document.getElementById('houseMsg');
-
-const fieldCard = document.getElementById('fieldCard');
-const buildFieldBtn = document.getElementById('buildFieldBtn');
-const fieldFill = document.getElementById('fieldFill');
-const fieldMsg = document.getElementById('fieldMsg');
-
-const campCard = document.getElementById('campCard');
-const buildCampBtn = document.getElementById('buildCampBtn');
-const campFill = document.getElementById('campFill');
-const campMsg = document.getElementById('campMsg');
-
-const mineCard = document.getElementById('mineCard');
-const buildMineBtn = document.getElementById('buildMineBtn');
-const mineFill = document.getElementById('mineFill');
-const mineMsg = document.getElementById('mineMsg');
+// Market buttons
+const sellWheatBtn = document.getElementById('sellWheat'); const sellWoodBtn = document.getElementById('sellWood'); const sellStoneBtn = document.getElementById('sellStone');
+const priceWheat = document.getElementById('priceWheat'); const priceWood = document.getElementById('priceWood'); const priceStone = document.getElementById('priceStone');
 
 export function initBuildings(){
   buildCastleBtn.addEventListener('click', buildCastle);
@@ -35,12 +25,19 @@ export function initBuildings(){
   buildFieldBtn.addEventListener('click', buildField);
   buildCampBtn.addEventListener('click', buildCamp);
   buildMineBtn.addEventListener('click', buildMine);
+  buildMillBtn.addEventListener('click', buildMill);
+  buildWarehouseBtn.addEventListener('click', buildWarehouse);
+  buildMarketBtn.addEventListener('click', buildMarket);
+  sellWheatBtn.addEventListener('click', sellWheat);
+  sellWoodBtn.addEventListener('click', sellWood);
+  sellStoneBtn.addEventListener('click', sellStone);
 
-  if (state.castleBuilt) showAfterCastle();
+  if (state.castleBuilt) unlockAfterCastle();
+  updateMarketPrices();
 }
-function showAfterCastle(){
-  houseCard.style.display='';
-  castleActions.innerHTML = `<span class="small muted">Château construit. Cliquez sur 🏰 pour générer de l'or.</span>`;
+function unlockAfterCastle(){
+  houseCard.style.display=''; fieldCard.style.display=''; campCard.style.display=''; mineCard.style.display=''; millCard.style.display=''; warehouseCard.style.display=''; marketCard.style.display='';
+  marketUI.style.display = state.markets>0 ? '' : 'none';
 }
 function buildCastle(){
   if (state.castleBuilt) return;
@@ -51,70 +48,120 @@ function buildCastle(){
     const ci = idx(Math.floor(CONFIG.GRID.rows/2), Math.floor(CONFIG.GRID.cols/2));
     placeEmoji(ci,'🏰','castle');
     setState({ castleBuilt: true });
-    showAfterCastle();
-    upsertCastleCard();
-    placeNaturalResources();
-  }, CONFIG.CASTLE.buildTimeMs);
+    unlockAfterCastle();
+    refreshAll(); placeNaturalResources();
+  }, CONFIG.COSTS.CASTLE.timeMs);
 }
 function buildHouse(){
-  if (state.gold < CONFIG.HOUSE.costGold){ houseMsg.textContent=`Pas assez d’or (${CONFIG.HOUSE.costGold}).`; return; }
-  houseFill.style.transition='none'; houseFill.style.width='0%';
-  requestAnimationFrame(()=>{ houseFill.style.transition='width 5s linear'; houseFill.style.width='100%'; });
+  const cost=CONFIG.COSTS.HOUSE;
+  if (state.gold < cost.gold){ houseMsg.textContent=`Pas assez d’or (${cost.gold}).`; return; }
+  houseFill.style.transition='none'; houseFill.style.width='0%'; requestAnimationFrame(()=>{ houseFill.style.transition='width 5s linear'; houseFill.style.width='100%'; });
   buildHouseBtn.disabled=true;
   setTimeout(()=>{
     buildHouseBtn.disabled=false; houseFill.style.transition='none'; houseFill.style.width='0%';
     const i = getRandomFreeCell(true); if(i===null){ houseMsg.textContent='Plus d’emplacements libres !'; return; }
     placeEmoji(i,'🏠','house'); state.housePositions.push(i);
-    setState({ gold: state.gold - CONFIG.HOUSE.costGold, houses: state.houses + 1, pop: state.pop + CONFIG.HOUSE.popGain });
-    upsertHousesCard();
-    fieldCard.style.display=''; campCard.style.display=''; mineCard.style.display='';
-  }, CONFIG.HOUSE.buildTimeMs);
+    setState({ gold: state.gold - cost.gold, houses: state.houses + 1, pop: state.pop + cost.popGain });
+    refreshAll();
+  }, cost.timeMs);
 }
 function buildField(){
-  if (state.gold < CONFIG.FIELD.costGold){ fieldMsg.textContent=`Pas assez d’or (${CONFIG.FIELD.costGold}).`; return; }
-  if (state.pop < 1){ fieldMsg.textContent='Population insuffisante (1).'; return; }
-  fieldFill.style.transition='none'; fieldFill.style.width='0%';
-  requestAnimationFrame(()=>{ fieldFill.style.transition='width 4s linear'; fieldFill.style.width='100%'; });
+  const cost=CONFIG.COSTS.FIELD;
+  if (state.gold < cost.gold){ fieldMsg.textContent=`Pas assez d’or (${cost.gold}).`; return; }
+  if (state.pop < cost.pop){ fieldMsg.textContent=`Population insuffisante (${cost.pop}).`; return; }
+  fieldFill.style.transition='none'; fieldFill.style.width='0%'; requestAnimationFrame(()=>{ fieldFill.style.transition='width 4s linear'; fieldFill.style.width='100%'; });
   buildFieldBtn.disabled=true;
   setTimeout(()=>{
     buildFieldBtn.disabled=false; fieldFill.style.transition='none'; fieldFill.style.width='0%';
     const i = getRandomFreeCell(true); if(i===null){ fieldMsg.textContent='Plus d’emplacements libres !'; return; }
     placeEmoji(i,'🌾','field'); state.fieldPositions.push(i);
-    setState({ gold: state.gold - CONFIG.FIELD.costGold, pop: state.pop - 1, fields: state.fields + 1 });
-    upsertFieldsCard();
-  }, CONFIG.FIELD.buildTimeMs);
-}
-function isAdjacentTo(list, i){
-  const cols = CONFIG.GRID.cols;
-  const r = Math.floor(i/cols), c = i%cols;
-  return list.some(ti=>{ const tr=Math.floor(ti/cols), tc=ti%cols; return (Math.abs(tr-r)+Math.abs(tc-c))===1; });
+    setState({ gold: state.gold - cost.gold, pop: state.pop - cost.pop, fields: state.fields + 1 });
+    refreshAll();
+  }, cost.timeMs);
 }
 function buildCamp(){
-  if (state.gold < CONFIG.CAMP.costGold){ campMsg.textContent=`Pas assez d’or (${CONFIG.CAMP.costGold}).`; return; }
-  if (state.pop < 1){ campMsg.textContent='Population insuffisante (1).'; return; }
-  campFill.style.transition='none'; campFill.style.width='0%';
-  requestAnimationFrame(()=>{ campFill.style.transition='width 6s linear'; campFill.style.width='100%'; });
+  const cost=CONFIG.COSTS.CAMP;
+  if (state.gold < cost.gold){ campMsg.textContent=`Pas assez d’or (${cost.gold}).`; return; }
+  if (state.pop < cost.pop){ campMsg.textContent=`Population insuffisante (${cost.pop}).`; return; }
+  campFill.style.transition='none'; campFill.style.width='0%'; requestAnimationFrame(()=>{ campFill.style.transition='width 6s linear'; campFill.style.width='100%'; });
   buildCampBtn.disabled=true;
   setTimeout(()=>{
     buildCampBtn.disabled=false; campFill.style.transition='none'; campFill.style.width='0%';
     let i = getRandomFreeCell(true); if(i===null){ campMsg.textContent='Plus d’emplacements libres !'; return; }
-    // require adjacency to a future 🌳 (none yet at prestige 0, keep placement free for now or comment in later)
     placeEmoji(i,'🪓','camp'); state.campPositions.push(i);
-    setState({ gold: state.gold - CONFIG.CAMP.costGold, pop: state.pop - 1, camps: state.camps + 1 });
-    upsertCampsCard();
-  }, CONFIG.CAMP.buildTimeMs);
+    setState({ gold: state.gold - cost.gold, pop: state.pop - cost.pop, camps: state.camps + 1 });
+    refreshAll();
+  }, cost.timeMs);
 }
 function buildMine(){
-  if (state.gold < CONFIG.MINE.costGold || state.wood < CONFIG.MINE.costWood){ mineMsg.textContent=`Coût: ${CONFIG.MINE.costGold} or + ${CONFIG.MINE.costWood} bois.`; return; }
-  if (state.pop < 1){ mineMsg.textContent='Population insuffisante (1).'; return; }
-  mineFill.style.transition='none'; mineFill.style.width='0%';
-  requestAnimationFrame(()=>{ mineFill.style.transition='width 8s linear'; mineFill.style.width='100%'; });
+  const cost=CONFIG.COSTS.MINE;
+  if (state.gold < cost.gold || state.wood < cost.wood){ mineMsg.textContent=`Coût: ${cost.gold} or + ${cost.wood} bois.`; return; }
+  if (state.pop < cost.pop){ mineMsg.textContent=`Population insuffisante (${cost.pop}).`; return; }
+  mineFill.style.transition='none'; mineFill.style.width='0%'; requestAnimationFrame(()=>{ mineFill.style.transition='width 8s linear'; mineFill.style.width='100%'; });
   buildMineBtn.disabled=true;
   setTimeout(()=>{
     buildMineBtn.disabled=false; mineFill.style.transition='none'; mineFill.style.width='0%';
     let i = getRandomFreeCell(true); if(i===null){ mineMsg.textContent='Plus d’emplacements libres !'; return; }
     placeEmoji(i,'⛏️','mine'); state.minePositions.push(i);
-    setState({ gold: state.gold - CONFIG.MINE.costGold, wood: state.wood - CONFIG.MINE.costWood, pop: state.pop - 1, mines: state.mines + 1 });
-    upsertMinesCard();
-  }, CONFIG.MINE.buildTimeMs);
+    setState({ gold: state.gold - cost.gold, wood: state.wood - cost.wood, pop: state.pop - cost.pop, mines: state.mines + 1 });
+    refreshAll();
+  }, cost.timeMs);
+}
+function buildMill(){
+  const cost=CONFIG.COSTS.MILL;
+  if (state.gold < cost.gold || state.wood < cost.wood){ millMsg.textContent=`Coût: ${cost.gold} or + ${cost.wood} bois.`; return; }
+  millFill.style.transition='none'; millFill.style.width='0%'; requestAnimationFrame(()=>{ millFill.style.transition='width 6s linear'; millFill.style.width='100%'; });
+  buildMillBtn.disabled=true;
+  setTimeout(()=>{
+    buildMillBtn.disabled=false; millFill.style.transition='none'; millFill.style.width='0%';
+    let i = getRandomFreeCell(true); if(i===null){ millMsg.textContent='Plus d’emplacements libres !'; return; }
+    placeEmoji(i,'🌬️','mill'); state.millPositions.push(i);
+    setState({ gold: state.gold - cost.gold, wood: state.wood - cost.wood, mills: state.mills + 1 });
+    refreshAll();
+  }, cost.timeMs);
+}
+function buildWarehouse(){
+  const cost=CONFIG.COSTS.WARE;
+  if (state.gold < cost.gold || state.wood < cost.wood){ warehouseMsg.textContent=`Coût: ${cost.gold} or + ${cost.wood} bois.`; return; }
+  warehouseFill.style.transition='none'; warehouseFill.style.width='0%'; requestAnimationFrame(()=>{ warehouseFill.style.transition='width 4s linear'; warehouseFill.style.width='100%'; });
+  buildWarehouseBtn.disabled=true;
+  setTimeout(()=>{
+    buildWarehouseBtn.disabled=false; warehouseFill.style.transition='none'; warehouseFill.style.width='0%';
+    let i = getRandomFreeCell(true); if(i===null){ warehouseMsg.textContent='Plus d’emplacements libres !'; return; }
+    placeEmoji(i,'📦','warehouse'); state.warePositions.push(i);
+    setState({ gold: state.gold - cost.gold, wood: state.wood - cost.wood, woodCap: state.woodCap + cost.addWood, stoneCap: state.stoneCap + cost.addStone, warehouses: state.warehouses + 1 });
+    refreshAll();
+  }, cost.timeMs);
+}
+function buildMarket(){
+  const cost=CONFIG.COSTS.MARKET;
+  if (state.gold < cost.gold){ marketMsg.textContent=`Pas assez d’or (${cost.gold}).`; return; }
+  marketFill.style.transition='none'; marketFill.style.width='0%'; requestAnimationFrame(()=>{ marketFill.style.transition='width 4s linear'; marketFill.style.width='100%'; });
+  buildMarketBtn.disabled=true;
+  setTimeout(()=>{
+    buildMarketBtn.disabled=false; marketFill.style.transition='none'; marketFill.style.width='0%';
+    let i = getRandomFreeCell(true); if(i===null){ marketMsg.textContent='Plus d’emplacements libres !'; return; }
+    placeEmoji(i,'🏪','market'); state.marketPositions.push(i);
+    setState({ gold: state.gold - cost.gold, markets: state.markets + 1 });
+    marketUI.style.display='';
+    refreshAll();
+  }, cost.timeMs);
+}
+
+function updateMarketPrices(){
+  priceWheat.textContent = `${(state.market.wheat*10).toFixed(0)} or`;
+  priceWood.textContent = `${(state.market.wood*10).toFixed(0)} or`;
+  priceStone.textContent = `${(state.market.stone*10).toFixed(0)} or`;
+}
+function sellWheat(){ if(state.wheat>=10){ setState({ wheat: state.wheat-10, gold: state.gold + state.market.wheat*10 }); } }
+function sellWood(){ if(state.wood>=10){ setState({ wood: state.wood-10, gold: state.gold + state.market.wood*10 }); } }
+function sellStone(){ if(state.stone>=10){ setState({ stone: state.stone-10, gold: state.gold + state.market.stone*10 }); } }
+
+export function tickMarketDrift(){
+  const d=CONFIG.MARKET.drift;
+  state.market.wheat = Math.max(0.5, Math.min(1.2, state.market.wheat + (Math.random()*2-1)*d));
+  state.market.wood  = Math.max(0.4, Math.min(1.0, state.market.wood  + (Math.random()*2-1)*d));
+  state.market.stone = Math.max(0.5, Math.min(1.1, state.market.stone + (Math.random()*2-1)*d));
+  setState({ market: state.market });
+  updateMarketPrices();
 }

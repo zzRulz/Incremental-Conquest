@@ -64,19 +64,35 @@ export function repaintFromState(){
     nodes[i].removeAttribute('data-index');
   }
   // center
-  const cc=board.children[idx(centerR,centerC)];
+  const ci=idx(Math.floor(rows/2), Math.floor(cols/2));
+  const cc=board.children[ci];
   cc.classList.add('center'); cc.id='centerCell';
 
-  // trees & rocks (none at prestige 0)
+  // trees & rocks
   state.treePositions.forEach(i=>{ placeEmoji(i,'🌳','tree'); });
   state.rockPositions.forEach(i=>{ placeEmoji(i,'🪨','rock'); });
 
   // castle
-  if(state.castleBuilt){ const ci = idx(centerR,centerC); placeEmoji(ci,'🏰','castle'); }
+  if(state.castleBuilt){ placeEmoji(ci,'🏰','castle'); }
 
   // buildings
   state.housePositions.forEach(i=>{ placeEmoji(i,'🏠','house'); });
   state.fieldPositions.forEach(i=>{ placeEmoji(i,'🌾','field'); });
   state.campPositions.forEach(i=>{ placeEmoji(i,'🪓','camp'); });
   state.minePositions.forEach(i=>{ placeEmoji(i,'⛏️','mine'); });
+  state.millPositions.forEach(i=>{ placeEmoji(i,'🌬️','mill'); });
+  state.warePositions.forEach(i=>{ placeEmoji(i,'📦','warehouse'); });
+  state.marketPositions.forEach(i=>{ placeEmoji(i,'🏪','market'); });
+}
+
+export function setDepletedClass(){
+  const nodes = board.children;
+  for(let i=0;i<nodes.length;i++){
+    const kind = nodes[i].dataset.kind;
+    if(!kind) continue;
+    let key = (kind==='field'||kind==='camp'||kind==='mine'||kind==='castle')?kind:null;
+    if(!key) continue;
+    const enough = (state.stamina[key]||0) >= CONFIG.CLICK.staminaCost;
+    if(enough) nodes[i].classList.remove('depleted'); else nodes[i].classList.add('depleted');
+  }
 }

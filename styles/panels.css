@@ -7,3 +7,4 @@
 .build-head{ font-weight:bold } .build-desc{ color:#9aa4b2; font-size:13px; margin:6px 0 }
 .build-bar{ height:8px; background:#0f1420; border-radius:5px; overflow:hidden; margin-top:6px }
 .build-fill{ height:100%; background:#6ee7ff; width:0% } .build-actions{ display:flex; align-items:center; gap:8px; margin-top:8px }
+.market-ui .row{ margin-top:8px } .tree .node{ padding:8px; margin:8px 0; border:1px solid #2a3245; border-radius:8px; cursor:pointer; background:#121723 } .tree .node.taken{ background:#1c2a1f; border-color:#2d5b38 }
