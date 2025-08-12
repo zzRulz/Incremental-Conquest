@@ -217,3 +217,17 @@ function upgradeForeman(){
 }
 
 export { updateMarketPrices };
+
+
+// 2.3g helper: gating buildings by castle level & previous counts (opt-in)
+export function isUnlocked(state, key){
+  const defs = state?.buildingDefs || {};
+  const def = defs[key]; if (!def) return true;
+  const need = def.need || {}; // { castleLv, prev, prevCount }
+  if (need.castleLv && state.castleLevel < need.castleLv) return false;
+  if (need.prev){
+    const n = (state.buildings && state.buildings[need.prev]) || 0;
+    if (n < (need.prevCount||0)) return false;
+  }
+  return true;
+}

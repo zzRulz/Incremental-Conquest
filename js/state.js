@@ -2,8 +2,23 @@ const listeners = new Map();
 export function on(evt, cb){ if(!listeners.has(evt)) listeners.set(evt, new Set()); listeners.get(evt).add(cb); }
 export function emit(evt, payload){ (listeners.get(evt)||[]).forEach(cb=>cb(payload)); }
 
+
+// 2.3g hotfix: migrate missing fields to safe defaults
+export function migrateState(s){
+  s = s || {};
+  s.version = s.version || { major:2, minor:3, suffix:'g' };
+  s.gold ||= 0; s.wood ||= 0; s.stone ||= 0; s.wheat ||= 0; s.science ||= 0; s.pop ||= 0;
+  s.woodCap ||= 10; s.stoneCap ||= 10;
+  s.zoneRadius ||= 2; s.zoneLevel ||= 1; s.zoneBonus ||= {}; s.zoneName ||= 'Campement';
+  if (s.prestige == null) s.prestige = 0;
+  if (s.prestigePoints == null) s.prestigePoints = 0;
+  s.castleBuilt = !!s.castleBuilt;
+  s.castleLevel = Math.max(1, Number(s.castleLevel||1));
+  return s;
+}
+
 export const state = {
-  version: { major: 2, minor: 2, suffix: 'a' },
+  version: { major: 2, minor: 3, suffix: 'g' },
   gold: 0, wood: 0, stone: 0, wheat: 0, science: 0, pop: 0,
   woodCap: 10, stoneCap: 10,
   zoneRadius: 2, zoneLevel: 1, zoneBonus: {}, zoneName: 'Campement',

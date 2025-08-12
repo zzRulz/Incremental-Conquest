@@ -50,11 +50,16 @@ function resetForPrestige(){
   repaintFromState(); refreshAll(); updateForemanUI();
 }
 function doPrestige(){
-  const pointsGained = Math.floor(Math.max(0, state.gold)/100);
-  setState({ prestigePoints: state.prestigePoints + pointsGained });
-  resetForPrestige();
-  prestigeModal.classList.remove('open');
-  updatePP();
+  // 2.3g hotfix: prestige at castle lvl >= 10, then reset run
+  if (state.castleLevel < 10) return false;
+  const gained = Math.max(1, Math.floor((state.totalGold||0) / 1e6));
+  // reset buildings counts if present in state
+  if (state.buildings) { Object.keys(state.buildings).forEach(k=>{ state.buildings[k]=0; }); }
+  state.castleLevel = 1;
+  state.gold = 0; state.wood = 0; state.stone = 0; state.wheat = 0; state.science = 0;
+  state.incomePerTick = 0;
+  state.prestige += gained; state.prestigePoints = (state.prestigePoints||0) + gained;
+  return true;
 }
 function spendPoint(id, nodeEl){
   if(state.prestigePoints<=0) return;
