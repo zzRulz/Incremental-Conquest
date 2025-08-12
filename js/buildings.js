@@ -58,9 +58,8 @@ function buildCastle(){
   requestAnimationFrame(()=>{ castleFill.style.transition='width 6s linear'; castleFill.style.width='100%'; });
   buildCastleBtn.disabled = true; castleMsg.textContent = 'Construction… (6s)';
   setTimeout(()=>{
-    const centerCell = getCenterCell();
-    centerCell.classList.remove('glow'); centerCell.classList.add('chateau'); centerCell.textContent='🏰';
-    occupy(idx(Math.floor(CONFIG.GRID.rows/2), Math.floor(CONFIG.GRID.cols/2)));
+    const ci = idx(Math.floor(CONFIG.GRID.rows/2), Math.floor(CONFIG.GRID.cols/2));
+    placeEmoji(ci,'🏰','castle');
     setState({ castleBuilt: true });
     toUpgradeUI();
     upsertCastleCard();

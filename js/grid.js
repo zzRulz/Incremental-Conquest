@@ -50,6 +50,7 @@ export function placeEmoji(i,emoji,kind){
   el.dataset.index = i;
   el.addEventListener('mousedown', handleClickDown);
   el.addEventListener('mouseup', handleClickUp);
+  el.addEventListener('click', handleClickUp);
   occupy(i);
 }
 
