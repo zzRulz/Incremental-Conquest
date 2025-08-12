@@ -19,7 +19,7 @@
   <div class="stat">Blé: <span id="wheat">0</span></div>
   <div class="stat">Pop: <span id="pop">0</span></div>
   <div class="stat small">💰 /clic: <span id="income" class="neu">0</span></div>
-  <div class="mode">
+  <div class="mode"><button id="menuBtn" class="btn">Menu</button>
     <button id="modeBtn" class="btn">Mode: Debug (2s)</button>
     <button id="soundBtn" class="btn">🔊 Son: ON</button>
     <button id="prestigeBtn" class="btn danger" disabled>Prestige</button>
@@ -106,5 +106,68 @@
 </main>
 
 <script type="module" src="js/main.js"></script>
+
+<div id="menuModal" class="modal" style="display:none">
+  <div class="modal-backdrop" id="menuBackdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="title">⚙️ Menu</div>
+      <button id="menuClose" class="btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3>Réinitialiser la partie</h3>
+        <p class="small">Supprime la sauvegarde et redémarre à zéro.</p>
+        <button id="resetBtn" class="btn danger">Reset complet</button>
+      </div>
+      <div class="modal-section">
+        <h3>Admin (dev)</h3>
+        <div class="admin-grid">
+          <div>
+            <label>Or</label>
+            <div class="row">
+              <input id="goldAmt" type="number" value="100" />
+              <button id="addGoldBtn" class="btn">+ Ajouter</button>
+              <button id="addGold1k" class="btn">+1000</button>
+            </div>
+          </div>
+          <div>
+            <label>Bois</label>
+            <div class="row">
+              <input id="woodAmt" type="number" value="100" />
+              <button id="addWoodBtn" class="btn">+ Ajouter</button>
+              <button id="addWood1k" class="btn">+1000</button>
+            </div>
+          </div>
+          <div>
+            <label>Pierre</label>
+            <div class="row">
+              <input id="stoneAmt" type="number" value="100" />
+              <button id="addStoneBtn" class="btn">+ Ajouter</button>
+              <button id="addStone1k" class="btn">+1000</button>
+            </div>
+          </div>
+          <div>
+            <label>Blé</label>
+            <div class="row">
+              <input id="wheatAmt" type="number" value="100" />
+              <button id="addWheatBtn" class="btn">+ Ajouter</button>
+              <button id="addWheat1k" class="btn">+1000</button>
+            </div>
+          </div>
+          <div>
+            <label>Population</label>
+            <div class="row">
+              <input id="popAmt" type="number" value="1" />
+              <button id="addPopBtn" class="btn">+ Ajouter</button>
+            </div>
+          </div>
+        </div>
+        <p class="small muted">Astuce: la stamina par type se régénère automatiquement (+5/s).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
