@@ -1,9 +1,11 @@
 import { CONFIG } from './config.js';
 import { state } from './state.js';
 import { handleClickDown, handleClickUp } from './clicker.js';
+import { handleBossClick } from './modules/boss.js';
 
 const board = document.getElementById('board');
 const zoneRSpan = document.getElementById('zoneR');
+const zoneName = document.getElementById('zoneName');
 let cols, rows, centerR, centerC;
 
 export function initGrid(){
@@ -22,6 +24,7 @@ export function initGrid(){
     }
   }
   zoneRSpan.textContent = state.zoneRadius;
+  zoneName.textContent = state.zoneName;
 }
 
 export function idx(r,c){ return r*cols + c; }
@@ -44,10 +47,9 @@ export function getRandomFreeCell(inZone=true){
   return free[Math.floor(Math.random()*free.length)];
 }
 export function getFreeAdjacentTo(list){
-  // return a random free index that is 4-adjacent (Manhattan 1) to any i in list
   const candidates = new Set();
   for(const ti of list){
-    const r=Math.floor(ti/cols), c=ti%cols;
+    const [r,c]=pos(ti);
     [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([rr,cc])=>{
       if(rr<0||cc<0||rr>=rows||cc>=cols) return;
       const ii = idx(rr,cc);
@@ -67,9 +69,12 @@ export function placeEmoji(i,emoji,kind){
   el.textContent = emoji;
   el.dataset.kind = kind;
   el.dataset.index = i;
-  el.addEventListener('mousedown', handleClickDown);
-  el.addEventListener('mouseup', handleClickUp);
-  el.addEventListener('click', handleClickUp);
+  if(kind==='boss'){ el.addEventListener('click', handleBossClick); }
+  else{
+    el.addEventListener('mousedown', handleClickDown);
+    el.addEventListener('mouseup', handleClickUp);
+    el.addEventListener('click', handleClickUp);
+  }
   occupy(i);
 }
 
@@ -91,6 +96,11 @@ export function repaintFromState(){
   state.treePositions.forEach(i=>{ placeEmoji(i,'🌳','tree'); });
   state.rockPositions.forEach(i=>{ placeEmoji(i,'🪨','rock'); });
 
+  // boss
+  if(state.boss.active && state.boss.index!=null){
+    placeEmoji(state.boss.index, '👹', 'boss');
+  }
+
   // castle
   if(state.castleBuilt){ placeEmoji(ci,'🏰','castle'); }
 
@@ -102,6 +112,7 @@ export function repaintFromState(){
   state.millPositions.forEach(i=>{ placeEmoji(i,'🌬️','mill'); });
   state.warePositions.forEach(i=>{ placeEmoji(i,'📦','warehouse'); });
   state.marketPositions.forEach(i=>{ placeEmoji(i,'🏪','market'); });
+  state.libraryPositions.forEach(i=>{ placeEmoji(i,'📚','library'); });
 }
 
 export function setDepletedClass(){

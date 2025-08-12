@@ -2,7 +2,7 @@ import { CONFIG, bumpPatch } from './config.js';
 import { state, setState, on } from './state.js';
 import { save, load } from './save.js';
 
-const goldEl = document.getElementById('gold'); const woodEl = document.getElementById('wood'); const stoneEl = document.getElementById('stone'); const wheatEl = document.getElementById('wheat');
+const goldEl = document.getElementById('gold'); const woodEl = document.getElementById('wood'); const stoneEl = document.getElementById('stone'); const wheatEl = document.getElementById('wheat'); const sciEl = document.getElementById('science');
 const woodCapEl = document.getElementById('woodCap'); const stoneCapEl = document.getElementById('stoneCap'); const popEl = document.getElementById('pop');
 const versionEl = document.getElementById('version');
 const menuBtn = document.getElementById('menuBtn'); const adminBtn = document.getElementById('adminBtn');
@@ -16,13 +16,12 @@ const goldAmt = document.getElementById('goldAmt'); const addGoldBtn = document.
 const woodAmt = document.getElementById('woodAmt'); const addWoodBtn = document.getElementById('addWoodBtn'); const addWood10 = document.getElementById('addWood10'); const addWood100 = document.getElementById('addWood100'); const addWood1k = document.getElementById('addWood1k');
 const stoneAmt = document.getElementById('stoneAmt'); const addStoneBtn = document.getElementById('addStoneBtn'); const addStone10 = document.getElementById('addStone10'); const addStone100 = document.getElementById('addStone100'); const addStone1k = document.getElementById('addStone1k');
 const wheatAmt = document.getElementById('wheatAmt'); const addWheatBtn = document.getElementById('addWheatBtn'); const addWheat10 = document.getElementById('addWheat10'); const addWheat100 = document.getElementById('addWheat100'); const addWheat1k = document.getElementById('addWheat1k');
+const sciAmt = document.getElementById('scienceAmt'); const addScienceBtn = document.getElementById('addScienceBtn');
 const popAmt = document.getElementById('popAmt'); const addPopBtn = document.getElementById('addPopBtn'); const bumpPatchBtn = document.getElementById('bumpPatch');
 
 export function initUI(){
-  // Version display
   versionEl.textContent = `v${state.version.major}.${state.version.minor}${state.version.suffix}`;
 
-  // Menu/admin
   menuBtn.addEventListener('click', ()=> menuModal.classList.add('open'));
   adminBtn.addEventListener('click', ()=>{ menuModal.classList.add('open'); setTimeout(()=> adminSection.scrollIntoView({behavior:'smooth'}), 50); });
   menuBackdrop.addEventListener('click', ()=> menuModal.classList.remove('open'));
@@ -37,19 +36,14 @@ export function initUI(){
     const reader = new FileReader(); reader.onload = (e)=>{ try{ const data = JSON.parse(e.target.result); Object.assign(state, data); save(); location.reload(); }catch(_){ alert('Import invalide'); } }; reader.readAsText(f);
   });
 
-  // Admin add handlers
   const addX = (key, get)=>(()=>{ const v = parseFloat(get().value)||0; let patch={}; patch[key]=(state[key]||0)+v; setState(patch); });
-  addGoldBtn.addEventListener('click', addX('gold', ()=>goldAmt)); addGold10.addEventListener('click', ()=>setState({gold: state.gold+10})); addGold100.addEventListener('click', ()=>setState({gold: state.gold+100})); addGold1k.addEventListener('click', ()=>setState({gold: state.gold+1000}));
-  addWoodBtn.addEventListener('click', addX('wood', ()=>woodAmt)); addWood10.addEventListener('click', ()=>setState({wood: state.wood+10})); addWood100.addEventListener('click', ()=>setState({wood: state.wood+100})); addWood1k.addEventListener('click', ()=>setState({wood: state.wood+1000}));
-  addStoneBtn.addEventListener('click', addX('stone', ()=>stoneAmt)); addStone10.addEventListener('click', ()=>setState({stone: state.stone+10})); addStone100.addEventListener('click', ()=>setState({stone: state.stone+100})); addStone1k.addEventListener('click', ()=>setState({stone: state.stone+1000}));
-  addWheatBtn.addEventListener('click', addX('wheat', ()=>wheatAmt)); addWheat10.addEventListener('click', ()=>setState({wheat: state.wheat+10})); addWheat100.addEventListener('click', ()=>setState({wheat: state.wheat+100})); addWheat1k.addEventListener('click', ()=>setState({wheat: state.wheat+1000}));
+  document.getElementById('addGoldBtn').addEventListener('click', addX('gold', ()=>goldAmt)); addGold10.addEventListener('click', ()=>setState({gold: state.gold+10})); addGold100.addEventListener('click', ()=>setState({gold: state.gold+100})); addGold1k.addEventListener('click', ()=>setState({gold: state.gold+1000}));
+  document.getElementById('addWoodBtn').addEventListener('click', addX('wood', ()=>woodAmt)); addWood10.addEventListener('click', ()=>setState({wood: state.wood+10})); addWood100.addEventListener('click', ()=>setState({wood: state.wood+100})); addWood1k.addEventListener('click', ()=>setState({wood: state.wood+1000}));
+  document.getElementById('addStoneBtn').addEventListener('click', addX('stone', ()=>stoneAmt)); addStone10.addEventListener('click', ()=>setState({stone: state.stone+10})); addStone100.addEventListener('click', ()=>setState({stone: state.stone+100})); addStone1k.addEventListener('click', ()=>setState({stone: state.stone+1000}));
+  document.getElementById('addWheatBtn').addEventListener('click', addX('wheat', ()=>wheatAmt)); addWheat10.addEventListener('click', ()=>setState({wheat: state.wheat+10})); addWheat100.addEventListener('click', ()=>setState({wheat: state.wheat+100})); addWheat1k.addEventListener('click', ()=>setState({wheat: state.wheat+1000}));
+  addScienceBtn.addEventListener('click', addX('science', ()=>sciAmt));
   addPopBtn.addEventListener('click', ()=>{ const v=parseInt(popAmt.value)||0; setState({pop: state.pop+v}); });
   bumpPatchBtn.addEventListener('click', ()=>{ bumpPatch(state.version); versionEl.textContent = `v${state.version.major}.${state.version.minor}${state.version.suffix}`; setState({version: state.version}); });
-
-  // Achievements modal
-  achBtn.addEventListener('click', ()=> achModal.classList.add('open'));
-  achBackdrop.addEventListener('click', ()=> achModal.classList.remove('open'));
-  achClose.addEventListener('click', ()=> achModal.classList.remove('open'));
 
   on('state:changed', refreshHeader);
   refreshHeader(state);
@@ -59,6 +53,7 @@ export function refreshHeader(){
   woodEl.textContent = Math.floor(state.wood);
   stoneEl.textContent = Math.floor(state.stone);
   wheatEl.textContent = Math.round(state.wheat*100)/100;
+  sciEl.textContent = Math.round(state.science*100)/100;
   woodCapEl.textContent = state.woodCap;
   stoneCapEl.textContent = state.stoneCap;
   popEl.textContent = state.pop;

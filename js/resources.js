@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { getCenterIndex, pos, placeEmoji, occupy, idx } from './grid.js';
 
 export function placeNaturalResources(){
-  // Trees at prestige >=2: 1 tree then +1 every 2 prestige (max 4) — at distance 1 from castle
+  // Trees at prestige >=2: distance 1 from castle
   const treesWanted = state.prestige >= 2 ? Math.min(4, 1 + Math.floor((state.prestige - 2)/2)) : 0;
   const ci = getCenterIndex(); const [cr,cc] = pos(ci);
   const ring = []; // manhattan distance 1
@@ -17,7 +17,7 @@ export function placeNaturalResources(){
     const i = available[n];
     placeEmoji(i,'🌳','tree'); state.treePositions.push(i); occupy(i);
   }
-  // Rocks: prestige / 3 random near center (distance 2)
+  // Rocks: prestige / 3 near center (distance 2)
   const rocksWanted = Math.min(8, Math.floor(state.prestige / 3));
   const ring2 = [];
   [[cr-2,cc],[cr+2,cc],[cr,cc-2],[cr,cc+2]].forEach(([r,c])=>{ if(r>=0&&c>=0){ ring2.push(idx(r,c)); }});

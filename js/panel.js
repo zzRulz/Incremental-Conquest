@@ -6,17 +6,23 @@ const left = document.getElementById('leftPanel');
 
 export function clearPanel(){ left.innerHTML=''; }
 
+function getMult(kind){
+  const ev = state.event.mult[kind] || 1;
+  const zone = state.zoneBonus[kind] || 1;
+  const tech = (state.techBonus[kind] || 1);
+  const art  = (state.artBonus[kind] || 1);
+  return state.globalMult * ev * zone * tech * art;
+}
 function staminaWidth(key){ return Math.max(0, Math.min(100, state.stamina[key]||0)); }
 function yieldPerClick(kind){
   const base = { castle: .1, field: .1, camp: .1, mine: .1 }[kind] || 0;
   const lvl = (kind==='castle') ? state.castleLevel : (state.levels[kind]||1);
   const bonus = 1 + 0.10 * (lvl-1);
-  const ev = state.event.mult[kind] || 1;
-  return (base * bonus * state.globalMult * ev).toFixed(2);
+  return (base * bonus * getMult(kind)).toFixed(2);
 }
 function costForUpgrade(kind){
   const lvl = (kind==='castle')? state.castleLevel : state.levels[kind];
-  return Math.ceil(5 * Math.pow(1.35, (lvl-1))); // scaling in gold
+  return Math.ceil(5 * Math.pow(1.35, (lvl-1)));
 }
 
 function upsert(kind, icon, title, usesStamina){

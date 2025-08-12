@@ -5,6 +5,7 @@ const QUESTS = [
   { id:'q_wheat200', name:'Récolter 200 blé',   cond: s=> s.totals.wheat>=200,  reward: s=> setState({ globalMult: s.globalMult*1.02 }) },
   { id:'q_wood200',  name:'Couper 200 bois',    cond: s=> s.totals.wood>=200,   reward: s=> setState({ woodCap: s.woodCap+50 }) },
   { id:'q_stone200', name:'Extraire 200 pierre',cond: s=> s.totals.stone>=200,  reward: s=> setState({ stoneCap: s.stoneCap+50 }) },
+  { id:'q_sci100',   name:'Étudier 100 science',cond: s=> s.totals.science>=100,reward: s=> setState({ globalMult: s.globalMult*1.03 }) },
 ];
 
 export function initQuests(){

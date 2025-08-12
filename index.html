@@ -3,22 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Conquête Clicker v2.1a</title>
+  <title>Conquête Clicker v2.2a</title>
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/board.css" />
   <link rel="stylesheet" href="styles/panels.css" />
 </head>
 <body>
 <header>
-  <h1>Conquête Clicker <span class="ver" id="version">v2.1a</span></h1>
+  <h1>Conquête Clicker <span class="ver" id="version">v2.2a</span></h1>
   <div class="stat">Or: <span id="gold">0</span></div>
   <div class="stat">Bois: <span id="wood">0</span> / <span id="woodCap">10</span></div>
   <div class="stat">Pierre: <span id="stone">0</span> / <span id="stoneCap">10</span></div>
   <div class="stat">Blé: <span id="wheat">0</span></div>
+  <div class="stat">Science: <span id="science">0</span></div>
   <div class="stat">Pop: <span id="pop">0</span></div>
   <div class="mode">
     <button id="menuBtn" class="btn">Menu</button>
     <button id="adminBtn" class="btn">Admin</button>
+    <button id="zonesBtn" class="btn">Zones</button>
+    <button id="techBtn" class="btn">Tech</button>
+    <button id="artBtn" class="btn">Artéfacts</button>
     <button id="achBtn" class="btn">Succès</button>
     <button id="questBtn" class="btn">Quêtes</button>
     <button id="prestigeBtn" class="btn danger">Prestige</button>
@@ -30,7 +34,7 @@
 
   <section>
     <div class="topbar">
-      <div>Zone: <b id="zoneR">2</b></div>
+      <div>Zone: <b id="zoneR">2</b> • <span id="zoneName">Campement</span></div>
       <div id="eventBanner" class="event-banner">Aucun événement</div>
     </div>
     <div id="board" class="board"></div>
@@ -102,6 +106,13 @@
       </div>
     </div>
 
+    <div class="build-card" id="libraryCard" style="display:none">
+      <div class="build-head">📚 Bibliothèque (clic: science)</div>
+      <div class="build-desc">Coût: 50 or + 20 bois • 6s • Rendement: +0,1 science/clic</div>
+      <div class="build-bar"><div class="build-fill" id="libraryFill"></div></div>
+      <div class="build-actions"><button class="btn" id="buildLibraryBtn">Construire</button><span class="small muted" id="libraryMsg">—</span></div>
+    </div>
+
     <div class="build-card" id="foremanCard" style="display:none">
       <div class="build-head">🧱 Contremaître (auto-click)</div>
       <div class="build-desc">Coût: 10 or, 10 bois, 3 pop • Niveau 1: 1 clic/s • Conso: 5 blé/min</div>
@@ -141,6 +152,7 @@
           <div><label>Bois</label><div class="row"><input id="woodAmt" type="number" value="100" /><button id="addWoodBtn" class="btn">+ Ajouter</button><button id="addWood10" class="btn">+10</button><button id="addWood100" class="btn">+100</button><button id="addWood1k" class="btn">+1000</button></div></div>
           <div><label>Pierre</label><div class="row"><input id="stoneAmt" type="number" value="100" /><button id="addStoneBtn" class="btn">+ Ajouter</button><button id="addStone10" class="btn">+10</button><button id="addStone100" class="btn">+100</button><button id="addStone1k" class="btn">+1000</button></div></div>
           <div><label>Blé</label><div class="row"><input id="wheatAmt" type="number" value="100" /><button id="addWheatBtn" class="btn">+ Ajouter</button><button id="addWheat10" class="btn">+10</button><button id="addWheat100" class="btn">+100</button><button id="addWheat1k" class="btn">+1000</button></div></div>
+          <div><label>Science</label><div class="row"><input id="scienceAmt" type="number" value="50" /><button id="addScienceBtn" class="btn">+ Ajouter</button></div></div>
           <div><label>Population</label><div class="row"><input id="popAmt" type="number" value="1" /><button id="addPopBtn" class="btn">+ Ajouter</button></div></div>
           <div><label>Version</label><div class="row"><button id="bumpPatch" class="btn">Bump v-suffix</button><span class="small muted">a→b→…→g puis +minor</span></div></div>
         </div>
@@ -149,7 +161,7 @@
   </div>
 </div>
 
-<!-- Succès modal -->
+<!-- Modals: Succès / Quêtes / Prestige / Zones / Tech / Artéfacts -->
 <div id="achModal" class="modal">
   <div class="modal-backdrop" id="achBackdrop"></div>
   <div class="modal-content">
@@ -158,7 +170,6 @@
   </div>
 </div>
 
-<!-- Quêtes modal -->
 <div id="questModal" class="modal">
   <div class="modal-backdrop" id="questBackdrop"></div>
   <div class="modal-content">
@@ -167,7 +178,6 @@
   </div>
 </div>
 
-<!-- Prestige modal -->
 <div id="prestigeModal" class="modal">
   <div class="modal-backdrop" id="prestigeBackdrop"></div>
   <div class="modal-content">
@@ -175,14 +185,38 @@
     <div class="modal-body">
       <div class="row"><div>Points: <b id="pp">0</b></div><button id="doPrestige" class="btn danger">Faire Prestige</button></div>
       <div id="tree" class="tree">
-        <div class="node" data-id="foremanUnlock">🤖 Contremaître (1 PP) — débloque le bâtiment</div>
+        <div class="node" data-id="foremanUnlock">🤖 Contremaître (1 PP)</div>
         <div class="node" data-id="foremanSpeed">⏩ Auto +25% (1 PP)</div>
-        <div class="node" data-id="stamina">💪 Stamina++ (1 PP) — regen +2/s</div>
-        <div class="node" data-id="crit">🎯 Crit++ (1 PP) — +2% crit</div>
-        <div class="node" data-id="hold">⚡ Chargé++ (1 PP) — x3.5</div>
+        <div class="node" data-id="stamina">💪 Stamina++ (1 PP)</div>
+        <div class="node" data-id="crit">🎯 Crit++ (1 PP)</div>
+        <div class="node" data-id="hold">⚡ Chargé++ (1 PP)</div>
         <div class="node" data-id="global">🌟 Global +5% (1 PP)</div>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="zonesModal" class="modal">
+  <div class="modal-backdrop" id="zonesBackdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header"><div class="title">🗺️ Zones</div><button id="zonesClose" class="btn">✕</button></div>
+    <div class="modal-body"><div id="zonesList"></div></div>
+  </div>
+</div>
+
+<div id="techModal" class="modal">
+  <div class="modal-backdrop" id="techBackdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header"><div class="title">🔬 Tech</div><button id="techClose" class="btn">✕</button></div>
+    <div class="modal-body"><div id="techList"></div></div>
+  </div>
+</div>
+
+<div id="artModal" class="modal">
+  <div class="modal-backdrop" id="artBackdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header"><div class="title">🧿 Artéfacts</div><button id="artClose" class="btn">✕</button></div>
+    <div class="modal-body"><div id="artList"></div></div>
   </div>
 </div>
 

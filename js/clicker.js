@@ -2,14 +2,20 @@ import { CONFIG } from './config.js';
 import { state, setState } from './state.js';
 import { refreshAll } from './panel.js';
 
-let holdMap = new Map(); // key = index, value = timeStart
+let holdMap = new Map();
 
+function getMult(kind){
+  const ev = state.event.mult[kind] || 1;
+  const zone = state.zoneBonus[kind] || 1;
+  const tech = (state.techBonus[kind] || 1);
+  const art  = (state.artBonus[kind] || 1);
+  return state.globalMult * ev * zone * tech * art;
+}
 function perClick(kind){
   const base = CONFIG.CLICK.base[kind] || 0;
   const level = (kind==='castle') ? state.castleLevel : (state.levels[kind]||1);
   const lvlBonus = 1 + (CONFIG.CLICK.levelBonusPct/100) * (level-1);
-  const ev = state.event.mult[kind] || 1;
-  return base * lvlBonus * state.globalMult * ev;
+  return base * lvlBonus * getMult(kind);
 }
 function spendStamina(kind){
   const cost = CONFIG.CLICK.staminaCost;
@@ -51,11 +57,10 @@ export function handleClickUp(e){
   holdMap.delete(idx);
   chargeRing(idx,false);
 
-  if(kind==='house' || kind==='tree' || kind==='rock') return;
+  if(kind==='house' || kind==='tree' || kind==='rock' || kind==='boss') return;
 
-  // Hard stamina gate
-  const key = (kind==='field'||kind==='camp'||kind==='mine'||kind==='castle')?kind:(kind==='mill'?'mill':null);
-  if(key && (state.stamina[key]||0) < CONFIG.CLICK.staminaCost){ showFloat(idx, 'épuisé'); return; }
+  const staminaKey = (kind==='field'||kind==='camp'||kind==='mine'||kind==='castle')?kind:(kind==='mill'?'mill':null);
+  if(staminaKey && (state.stamina[staminaKey]||0) < CONFIG.CLICK.staminaCost){ showFloat(idx, 'épuisé'); return; }
 
   let mult = 1;
   if(held >= CONFIG.CLICK.holdMs) mult *= CONFIG.CLICK.holdMult;
@@ -84,11 +89,15 @@ export function handleClickUp(e){
     showFloat(idx, `+${v.toFixed(2)} pierre`, crit?'crit':'');
     spendStamina('mine');
   } else if(kind==='mill'){
-    // convert 1 wheat -> 0.8 gold (if wheat available)
     if(state.wheat < 1){ showFloat(idx, 'blé manquant'); return; }
     const g = 0.8 * mult;
     setState({ wheat: state.wheat - 1, gold: state.gold + g });
     showFloat(idx, `-1 blé → +${g.toFixed(2)} or`);
+  } else if(kind==='library'){
+    let v = 0.1 * mult;
+    if(state.artBonus['sciencePlus']) v += 1; // +1 science/clic via artefact
+    setState({ science: state.science + v, totals: {...state.totals, science: state.totals.science + v }, clicks: {...state.clicks, library: state.clicks.library+1} });
+    showFloat(idx, `+${v.toFixed(2)} sci`);
   }
 
   refreshAll();
