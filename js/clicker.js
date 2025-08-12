@@ -8,7 +8,8 @@ function perClick(kind){
   const base = CONFIG.CLICK.base[kind] || 0;
   const level = (kind==='castle') ? state.castleLevel : (state.levels[kind]||1);
   const lvlBonus = 1 + (CONFIG.CLICK.levelBonusPct/100) * (level-1);
-  return base * lvlBonus * state.globalMult;
+  const ev = state.event.mult[kind] || 1;
+  return base * lvlBonus * state.globalMult * ev;
 }
 function spendStamina(kind){
   const cost = CONFIG.CLICK.staminaCost;
@@ -58,7 +59,8 @@ export function handleClickUp(e){
 
   let mult = 1;
   if(held >= CONFIG.CLICK.holdMs) mult *= CONFIG.CLICK.holdMult;
-  const crit = Math.random() < (CONFIG.CLICK.critChance + (state.achievements['critPlus']?0.02:0));
+  const critChance = CONFIG.CLICK.critChance + (state.achievements['critPlus']?0.02:0);
+  const crit = Math.random() < critChance;
   if(crit) mult *= CONFIG.CLICK.critMult;
 
   if(kind==='castle'){

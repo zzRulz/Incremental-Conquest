@@ -8,6 +8,8 @@ import { startTimers } from './timers.js';
 import { refreshAll } from './panel.js';
 import { placeNaturalResources } from './resources.js';
 import { initPrestige } from './prestige.js';
+import { initQuests } from './quests.js';
+import { checkAchievements } from './achievements.js';
 
 window.addEventListener('beforeunload', ()=>{
   try{ localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(state)); }catch(_){}
@@ -20,8 +22,10 @@ window.addEventListener('beforeunload', ()=>{
   initUI();
   initBuildings();
   initPrestige();
+  initQuests();
   placeNaturalResources();
   repaintFromState();
   refreshAll();
+  checkAchievements();
   startTimers();
 })();

@@ -1,6 +1,6 @@
 import { CONFIG, bumpPatch } from './config.js';
 import { state, setState } from './state.js';
-import { idx, getRandomFreeCell, placeEmoji } from './grid.js';
+import { idx, getRandomFreeCell, getFreeAdjacentTo, placeEmoji, getCenterIndex } from './grid.js';
 import { refreshAll } from './panel.js';
 import { placeNaturalResources } from './resources.js';
 
@@ -14,6 +14,9 @@ const buildMillBtn = document.getElementById('buildMillBtn'); const millFill = d
 const buildWarehouseBtn = document.getElementById('buildWarehouseBtn'); const warehouseFill = document.getElementById('warehouseFill'); const warehouseMsg = document.getElementById('warehouseMsg'); const warehouseCard = document.getElementById('warehouseCard');
 const buildMarketBtn = document.getElementById('buildMarketBtn'); const marketFill = document.getElementById('marketFill'); const marketMsg = document.getElementById('marketMsg'); const marketCard = document.getElementById('marketCard');
 const marketUI = document.getElementById('marketUI');
+
+// Foreman
+const foremanCard = document.getElementById('foremanCard'); const buildForemanBtn = document.getElementById('buildForemanBtn'); const toggleForemanBtn = document.getElementById('toggleForemanBtn'); const upgradeForemanBtn = document.getElementById('upgradeForemanBtn'); const foremanMsg = document.getElementById('foremanMsg');
 
 // Market buttons
 const sellWheatBtn = document.getElementById('sellWheat'); const sellWoodBtn = document.getElementById('sellWood'); const sellStoneBtn = document.getElementById('sellStone');
@@ -31,13 +34,20 @@ export function initBuildings(){
   sellWheatBtn.addEventListener('click', sellWheat);
   sellWoodBtn.addEventListener('click', sellWood);
   sellStoneBtn.addEventListener('click', sellStone);
+  buildForemanBtn.addEventListener('click', buildForeman);
+  toggleForemanBtn.addEventListener('click', toggleForeman);
+  upgradeForemanBtn.addEventListener('click', upgradeForeman);
 
   if (state.castleBuilt) unlockAfterCastle();
   updateMarketPrices();
+  updateForemanCard();
 }
 function unlockAfterCastle(){
   houseCard.style.display=''; fieldCard.style.display=''; campCard.style.display=''; mineCard.style.display=''; millCard.style.display=''; warehouseCard.style.display=''; marketCard.style.display='';
   marketUI.style.display = state.markets>0 ? '' : 'none';
+  // Foreman card if unlocked in prestige
+  if(state.achievements['foremanUnlock'] || state.prestigePoints>=0){ foremanCard.style.display=''; }
+  updateForemanCard();
 }
 function buildCastle(){
   if (state.castleBuilt) return;
@@ -45,7 +55,7 @@ function buildCastle(){
   requestAnimationFrame(()=>{ castleFill.style.transition='width 6s linear'; castleFill.style.width='100%'; });
   buildCastleBtn.disabled = true; castleMsg.textContent = 'Construction… (6s)';
   setTimeout(()=>{
-    const ci = idx(Math.floor(CONFIG.GRID.rows/2), Math.floor(CONFIG.GRID.cols/2));
+    const ci = getCenterIndex();
     placeEmoji(ci,'🏰','castle');
     setState({ castleBuilt: true });
     unlockAfterCastle();
@@ -83,11 +93,13 @@ function buildCamp(){
   const cost=CONFIG.COSTS.CAMP;
   if (state.gold < cost.gold){ campMsg.textContent=`Pas assez d’or (${cost.gold}).`; return; }
   if (state.pop < cost.pop){ campMsg.textContent=`Population insuffisante (${cost.pop}).`; return; }
+  if (state.treePositions.length<=0){ campMsg.textContent='Aucun arbre dispo (Prestige 2+).'; return; }
   campFill.style.transition='none'; campFill.style.width='0%'; requestAnimationFrame(()=>{ campFill.style.transition='width 6s linear'; campFill.style.width='100%'; });
   buildCampBtn.disabled=true;
   setTimeout(()=>{
     buildCampBtn.disabled=false; campFill.style.transition='none'; campFill.style.width='0%';
-    let i = getRandomFreeCell(true); if(i===null){ campMsg.textContent='Plus d’emplacements libres !'; return; }
+    let i = getFreeAdjacentTo(state.treePositions);
+    if(i===null){ campMsg.textContent='Pas de case libre adjacente à un arbre.'; return; }
     placeEmoji(i,'🪓','camp'); state.campPositions.push(i);
     setState({ gold: state.gold - cost.gold, pop: state.pop - cost.pop, camps: state.camps + 1 });
     refreshAll();
@@ -97,11 +109,13 @@ function buildMine(){
   const cost=CONFIG.COSTS.MINE;
   if (state.gold < cost.gold || state.wood < cost.wood){ mineMsg.textContent=`Coût: ${cost.gold} or + ${cost.wood} bois.`; return; }
   if (state.pop < cost.pop){ mineMsg.textContent=`Population insuffisante (${cost.pop}).`; return; }
+  if (state.rockPositions.length<=0){ mineMsg.textContent='Aucune roche dispo.'; return; }
   mineFill.style.transition='none'; mineFill.style.width='0%'; requestAnimationFrame(()=>{ mineFill.style.transition='width 8s linear'; mineFill.style.width='100%'; });
   buildMineBtn.disabled=true;
   setTimeout(()=>{
     buildMineBtn.disabled=false; mineFill.style.transition='none'; mineFill.style.width='0%';
-    let i = getRandomFreeCell(true); if(i===null){ mineMsg.textContent='Plus d’emplacements libres !'; return; }
+    let i = getFreeAdjacentTo(state.rockPositions);
+    if(i===null){ mineMsg.textContent='Pas de case libre adjacente à une roche.'; return; }
     placeEmoji(i,'⛏️','mine'); state.minePositions.push(i);
     setState({ gold: state.gold - cost.gold, wood: state.wood - cost.wood, pop: state.pop - cost.pop, mines: state.mines + 1 });
     refreshAll();
@@ -149,13 +163,14 @@ function buildMarket(){
 }
 
 function updateMarketPrices(){
-  priceWheat.textContent = `${(state.market.wheat*10).toFixed(0)} or`;
-  priceWood.textContent = `${(state.market.wood*10).toFixed(0)} or`;
-  priceStone.textContent = `${(state.market.stone*10).toFixed(0)} or`;
+  const bonus = 1 + (state.event.marketBonus||0);
+  priceWheat.textContent = `${Math.round(state.market.wheat*10*bonus)} or`;
+  priceWood.textContent  = `${Math.round(state.market.wood*10*bonus)} or`;
+  priceStone.textContent = `${Math.round(state.market.stone*10*bonus)} or`;
 }
-function sellWheat(){ if(state.wheat>=10){ setState({ wheat: state.wheat-10, gold: state.gold + state.market.wheat*10 }); } }
-function sellWood(){ if(state.wood>=10){ setState({ wood: state.wood-10, gold: state.gold + state.market.wood*10 }); } }
-function sellStone(){ if(state.stone>=10){ setState({ stone: state.stone-10, gold: state.gold + state.market.stone*10 }); } }
+function sellWheat(){ const bonus=1+(state.event.marketBonus||0); if(state.wheat>=10){ setState({ wheat: state.wheat-10, gold: state.gold + state.market.wheat*10*bonus }); } }
+function sellWood(){ const bonus=1+(state.event.marketBonus||0); if(state.wood>=10){ setState({ wood: state.wood-10, gold: state.gold + state.market.wood*10*bonus }); } }
+function sellStone(){ const bonus=1+(state.event.marketBonus||0); if(state.stone>=10){ setState({ stone: state.stone-10, gold: state.gold + state.market.stone*10*bonus }); } }
 
 export function tickMarketDrift(){
   const d=CONFIG.MARKET.drift;
@@ -165,3 +180,40 @@ export function tickMarketDrift(){
   setState({ market: state.market });
   updateMarketPrices();
 }
+
+// Foreman
+function updateForemanCard(){
+  if(!foremanCard) return;
+  if(!state.castleBuilt) { foremanCard.style.display='none'; return; }
+  // Show only if prestige unlock is taken or already built
+  foremanCard.style.display = state.achievements['foremanUnlock'] || state.foreman.built ? '' : 'none';
+  if(state.foreman.built){
+    buildForemanBtn.style.display='none'; toggleForemanBtn.style.display=''; upgradeForemanBtn.style.display='';
+    foremanMsg.textContent = `Niv ${state.foreman.level} • ${state.foreman.clicksPerSec.toFixed(1)} clic/s • Conso ${state.foreman.wheatPerMin}/min`;
+    toggleForemanBtn.textContent = state.foreman.on?'Pause':'Reprendre';
+  } else {
+    buildForemanBtn.style.display=''; toggleForemanBtn.style.display='none'; upgradeForemanBtn.style.display='none';
+    foremanMsg.textContent = '—';
+  }
+}
+export function updateForemanUI(){ updateForemanCard(); }
+
+function buildForeman(){
+  if(state.foreman.built) return;
+  const cost=CONFIG.COSTS.FOREMAN;
+  if(state.gold<cost.gold || state.wood<cost.wood || state.pop<cost.pop){ foremanMsg.textContent = `Coût: ${cost.gold} or, ${cost.wood} bois, ${cost.pop} pop.`; return; }
+  setState({ gold: state.gold-cost.gold, wood: state.wood-cost.wood, pop: state.pop-cost.pop, foreman: { built:true, level:1, on:true, clicksPerSec:1, wheatPerMin:5 } });
+  updateForemanCard();
+}
+function toggleForeman(){ if(!state.foreman.built) return; state.foreman.on=!state.foreman.on; setState({ foreman: state.foreman }); updateForemanCard(); }
+function upgradeForeman(){
+  if(!state.foreman.built) return;
+  const next = state.foreman.level+1;
+  const cost = Math.ceil(15 * Math.pow(1.6, state.foreman.level-1));
+  if(state.gold < cost){ foremanMsg.textContent=`Coût: ${cost} or`; return; }
+  state.foreman.level = next; state.foreman.clicksPerSec = 1 + 0.5*(next-1); state.foreman.wheatPerMin = 5 + 2*(next-1);
+  setState({ gold: state.gold-cost, foreman: state.foreman });
+  updateForemanCard();
+}
+
+export { updateMarketPrices };

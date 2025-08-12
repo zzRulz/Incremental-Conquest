@@ -11,11 +11,12 @@ function yieldPerClick(kind){
   const base = { castle: .1, field: .1, camp: .1, mine: .1 }[kind] || 0;
   const lvl = (kind==='castle') ? state.castleLevel : (state.levels[kind]||1);
   const bonus = 1 + 0.10 * (lvl-1);
-  return (base * bonus * state.globalMult).toFixed(2);
+  const ev = state.event.mult[kind] || 1;
+  return (base * bonus * state.globalMult * ev).toFixed(2);
 }
 function costForUpgrade(kind){
   const lvl = (kind==='castle')? state.castleLevel : state.levels[kind];
-  return Math.ceil(5 * Math.pow(1.35, (lvl-1))); // simple scaling in gold
+  return Math.ceil(5 * Math.pow(1.35, (lvl-1))); // scaling in gold
 }
 
 function upsert(kind, icon, title, usesStamina){

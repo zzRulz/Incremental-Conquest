@@ -25,7 +25,8 @@ export function initGrid(){
 }
 
 export function idx(r,c){ return r*cols + c; }
-export function getCenterCell(){ return document.getElementById('centerCell'); }
+export function pos(i){ const r=Math.floor(i/cols), c=i%cols; return [r,c]; }
+export function getCenterIndex(){ return idx(Math.floor(rows/2), Math.floor(cols/2)); }
 export function occupy(i){ if(!state.occupied.includes(i)) state.occupied.push(i); }
 function isInZone(r,c){ return Math.max(Math.abs(r-centerR), Math.abs(c-centerC)) <= state.zoneRadius; }
 
@@ -35,12 +36,30 @@ export function getRandomFreeCell(inZone=true){
     for(let c=0;c<cols;c++){
       if(inZone && !isInZone(r,c)) continue;
       const i = idx(r,c);
-      if(i===idx(centerR,centerC)) continue;
+      if(i===getCenterIndex()) continue;
       if(!state.occupied.includes(i)) free.push(i);
     }
   }
   if(free.length===0) return null;
   return free[Math.floor(Math.random()*free.length)];
+}
+export function getFreeAdjacentTo(list){
+  // return a random free index that is 4-adjacent (Manhattan 1) to any i in list
+  const candidates = new Set();
+  for(const ti of list){
+    const r=Math.floor(ti/cols), c=ti%cols;
+    [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([rr,cc])=>{
+      if(rr<0||cc<0||rr>=rows||cc>=cols) return;
+      const ii = idx(rr,cc);
+      if(ii===getCenterIndex()) return;
+      if(state.occupied.includes(ii)) return;
+      if(!isInZone(rr,cc)) return;
+      candidates.add(ii);
+    });
+  }
+  const arr=[...candidates];
+  if(arr.length===0) return null;
+  return arr[Math.floor(Math.random()*arr.length)];
 }
 
 export function placeEmoji(i,emoji,kind){
@@ -64,7 +83,7 @@ export function repaintFromState(){
     nodes[i].removeAttribute('data-index');
   }
   // center
-  const ci=idx(Math.floor(rows/2), Math.floor(cols/2));
+  const ci=getCenterIndex();
   const cc=board.children[ci];
   cc.classList.add('center'); cc.id='centerCell';
 
@@ -92,7 +111,7 @@ export function setDepletedClass(){
     if(!kind) continue;
     let key = (kind==='field'||kind==='camp'||kind==='mine'||kind==='castle')?kind:null;
     if(!key) continue;
-    const enough = (state.stamina[key]||0) >= CONFIG.CLICK.staminaCost;
+    const enough = (state.stamina[key]||0) >= 10;
     if(enough) nodes[i].classList.remove('depleted'); else nodes[i].classList.add('depleted');
   }
 }

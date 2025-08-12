@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Conquête Clicker v2.0a</title>
+  <title>Conquête Clicker v2.1a</title>
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/board.css" />
   <link rel="stylesheet" href="styles/panels.css" />
 </head>
 <body>
 <header>
-  <h1>Conquête Clicker <span class="ver" id="version">v2.0a</span></h1>
+  <h1>Conquête Clicker <span class="ver" id="version">v2.1a</span></h1>
   <div class="stat">Or: <span id="gold">0</span></div>
   <div class="stat">Bois: <span id="wood">0</span> / <span id="woodCap">10</span></div>
   <div class="stat">Pierre: <span id="stone">0</span> / <span id="stoneCap">10</span></div>
@@ -20,6 +20,7 @@
     <button id="menuBtn" class="btn">Menu</button>
     <button id="adminBtn" class="btn">Admin</button>
     <button id="achBtn" class="btn">Succès</button>
+    <button id="questBtn" class="btn">Quêtes</button>
     <button id="prestigeBtn" class="btn danger">Prestige</button>
   </div>
 </header>
@@ -30,7 +31,7 @@
   <section>
     <div class="topbar">
       <div>Zone: <b id="zoneR">2</b></div>
-      <div id="eventBanner" class="event-banner" style="display:none">Événement: —</div>
+      <div id="eventBanner" class="event-banner">Aucun événement</div>
     </div>
     <div id="board" class="board"></div>
   </section>
@@ -74,7 +75,7 @@
 
     <div class="build-card" id="millCard" style="display:none">
       <div class="build-head">🌬️ Moulin (clic: convertit blé→or)</div>
-      <div class="build-desc">Coût: 20 or + 10 bois • 6s • 1 blé → 0,8 or par clic</div>
+      <div class="build-desc">Coût: 20 or + 10 bois • 6s • 1 blé → 0,8 or/clic</div>
       <div class="build-bar"><div class="build-fill" id="millFill"></div></div>
       <div class="build-actions"><button class="btn" id="buildMillBtn">Construire</button><span class="small muted" id="millMsg">—</span></div>
     </div>
@@ -100,6 +101,18 @@
         <div class="small muted">Prix varient légèrement au fil du temps.</div>
       </div>
     </div>
+
+    <div class="build-card" id="foremanCard" style="display:none">
+      <div class="build-head">🧱 Contremaître (auto-click)</div>
+      <div class="build-desc">Coût: 10 or, 10 bois, 3 pop • Niveau 1: 1 clic/s • Conso: 5 blé/min</div>
+      <div class="build-actions">
+        <button class="btn" id="buildForemanBtn">Construire</button>
+        <button class="btn" id="toggleForemanBtn" style="display:none">Pause</button>
+        <button class="btn" id="upgradeForemanBtn" style="display:none">Améliorer</button>
+        <span class="small muted" id="foremanMsg">—</span>
+      </div>
+    </div>
+
   </aside>
 </main>
 
@@ -145,7 +158,16 @@
   </div>
 </div>
 
-<!-- Prestige modal (arbre rapide) -->
+<!-- Quêtes modal -->
+<div id="questModal" class="modal">
+  <div class="modal-backdrop" id="questBackdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header"><div class="title">📜 Quêtes</div><button id="questClose" class="btn">✕</button></div>
+    <div class="modal-body"><div id="questList"></div></div>
+  </div>
+</div>
+
+<!-- Prestige modal -->
 <div id="prestigeModal" class="modal">
   <div class="modal-backdrop" id="prestigeBackdrop"></div>
   <div class="modal-content">
@@ -153,10 +175,12 @@
     <div class="modal-body">
       <div class="row"><div>Points: <b id="pp">0</b></div><button id="doPrestige" class="btn danger">Faire Prestige</button></div>
       <div id="tree" class="tree">
-        <div class="node" data-id="foreman">🤖 Contremaître (1 PP) — débloque l’automate</div>
+        <div class="node" data-id="foremanUnlock">🤖 Contremaître (1 PP) — débloque le bâtiment</div>
+        <div class="node" data-id="foremanSpeed">⏩ Auto +25% (1 PP)</div>
         <div class="node" data-id="stamina">💪 Stamina++ (1 PP) — regen +2/s</div>
         <div class="node" data-id="crit">🎯 Crit++ (1 PP) — +2% crit</div>
         <div class="node" data-id="hold">⚡ Chargé++ (1 PP) — x3.5</div>
+        <div class="node" data-id="global">🌟 Global +5% (1 PP)</div>
       </div>
     </div>
   </div>

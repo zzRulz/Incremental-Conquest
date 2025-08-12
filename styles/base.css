@@ -5,7 +5,7 @@ header h1{font-size:18px; margin:0 10px 0 0} header .ver{color:#8aa7ff; font-wei
 .stat{min-width:120px; padding:8px 12px; border:1px solid #2a3245; border-radius:12px; background:#141923; text-align:center}
 .btn{border:1px solid #2a3245; background:#161a22; color:#e6e8eb; padding:10px 14px; border-radius:10px; cursor:pointer}
 .btn.danger{background:linear-gradient(180deg,var(--danger),#b72f2f); border-color:#b72f2f; color:#fff}
-.layout{display:grid; grid-template-columns: 300px 1fr 440px; gap:18px; padding:18px; max-width:1580px; margin:0 auto}
+.layout{display:grid; grid-template-columns: 300px 1fr 460px; gap:18px; padding:18px; max-width:1620px; margin:0 auto}
 .muted{color:var(--muted); font-size:13px} .small{font-size:12px; color:#8b95a8}
 .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
 .mode{display:flex; gap:8px; align-items:center}
@@ -13,7 +13,7 @@ header h1{font-size:18px; margin:0 10px 0 0} header .ver{color:#8aa7ff; font-wei
 .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:1000 }
 .modal.open{ display:flex; }
 .modal-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.5) }
-.modal-content{ position:relative; background:#141923; border:1px solid #2a3245; border-radius:12px; width:min(820px, 96vw); max-height:90vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.5) }
+.modal-content{ position:relative; background:#141923; border:1px solid #2a3245; border-radius:12px; width:min(880px, 96vw); max-height:90vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.5) }
 .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #2a3245 }
 .modal-header .title{ font-weight:800 } .modal-body{ padding:14px }
 .modal-section{ background:#121723; border:1px solid #2a3245; border-radius:10px; padding:12px; margin-bottom:12px }

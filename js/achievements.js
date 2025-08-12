@@ -6,6 +6,7 @@ export const ACHIEVEMENTS = [
   { id:'wood100',     name:'Bûcheron',         cond: s=> s.clicks.camp>=100,    bonus: s=> setState({ globalMult: s.globalMult*1.01 }) },
   { id:'stone100',    name:'Mineur',           cond: s=> s.clicks.mine>=100,    bonus: s=> setState({ globalMult: s.globalMult*1.01 }) },
   { id:'critPlus',    name:'Visée',            cond: s=> (s.totals.gold+s.totals.wood+s.totals.stone)>=200, bonus: s=> { s.achievements['critPlus']=true; setState({ achievements: s.achievements }); } },
+  { id:'foremanUnlock', name:'Chef d'équipe', cond: s=> s.prestige>=1, bonus: s=> { s.achievements['foremanUnlock']=true; setState({ achievements: s.achievements }); } },
 ];
 
 export function checkAchievements(){
