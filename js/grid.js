@@ -17,7 +17,7 @@ export function initGrid(){
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.dataset.r = r; cell.dataset.c = c;
-      if(r===centerR && c===centerC){ cell.classList.add('center','glow'); cell.id='centerCell'; }
+      if(r===centerR && c===centerC){ cell.classList.add('center'); cell.id='centerCell'; }
       board.appendChild(cell);
     }
   }
@@ -27,13 +27,13 @@ export function initGrid(){
 export function idx(r,c){ return r*cols + c; }
 export function getCenterCell(){ return document.getElementById('centerCell'); }
 export function occupy(i){ if(!state.occupied.includes(i)) state.occupied.push(i); }
-function isConstructible(r,c){ return Math.max(Math.abs(r-centerR), Math.abs(c-centerC)) <= state.zoneRadius; }
+function isInZone(r,c){ return Math.max(Math.abs(r-centerR), Math.abs(c-centerC)) <= state.zoneRadius; }
 
 export function getRandomFreeCell(inZone=true){
   const free = [];
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
-      if(inZone && !isConstructible(r,c)) continue;
+      if(inZone && !isInZone(r,c)) continue;
       const i = idx(r,c);
       if(i===idx(centerR,centerC)) continue;
       if(!state.occupied.includes(i)) free.push(i);
@@ -65,14 +65,14 @@ export function repaintFromState(){
   }
   // center
   const cc=board.children[idx(centerR,centerC)];
-  cc.classList.add('center','glow'); cc.id='centerCell';
+  cc.classList.add('center'); cc.id='centerCell';
 
-  // trees & rocks
+  // trees & rocks (none at prestige 0)
   state.treePositions.forEach(i=>{ placeEmoji(i,'🌳','tree'); });
   state.rockPositions.forEach(i=>{ placeEmoji(i,'🪨','rock'); });
 
   // castle
-  if(state.castleBuilt){ placeEmoji(idx(centerR,centerC),'🏰','castle'); }
+  if(state.castleBuilt){ const ci = idx(centerR,centerC); placeEmoji(ci,'🏰','castle'); }
 
   // buildings
   state.housePositions.forEach(i=>{ placeEmoji(i,'🏠','house'); });

@@ -3,26 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Conquête Clicker</title>
-  <link rel="icon" href="assets/favicon.svg" />
+  <title>Conquête Clicker v1.1</title>
   <link rel="stylesheet" href="styles/base.css" />
-  <link rel="stylesheet" href="styles/theme-dark.css" />
   <link rel="stylesheet" href="styles/board.css" />
   <link rel="stylesheet" href="styles/panels.css" />
 </head>
 <body>
 <header>
-  <h1>Conquête Clicker</h1>
+  <h1>Conquête Clicker <span class="ver">v1.1</span></h1>
   <div class="stat">Or: <span id="gold">0</span></div>
   <div class="stat">Bois: <span id="wood">0</span> / <span id="woodCap">10</span></div>
   <div class="stat">Pierre: <span id="stone">0</span> / <span id="stoneCap">10</span></div>
   <div class="stat">Blé: <span id="wheat">0</span></div>
   <div class="stat">Pop: <span id="pop">0</span></div>
-  <div class="stat small">💰 /clic: <span id="income" class="neu">0</span></div>
-  <div class="mode"><button id="menuBtn" class="btn">Menu</button> <button id="adminBtn" class="btn">Admin</button>
-    <button id="modeBtn" class="btn">Mode: Debug (2s)</button>
-    <button id="soundBtn" class="btn">🔊 Son: ON</button>
-    <button id="prestigeBtn" class="btn danger" disabled>Prestige</button>
+  <div class="mode">
+    <button id="menuBtn" class="btn">Menu</button>
+    <button id="adminBtn" class="btn">Admin</button>
   </div>
 </header>
 
@@ -81,9 +77,9 @@
       </div>
     </div>
 
-    <!-- Mine de pierre -->
+    <!-- Mine -->
     <div class="build-card" id="mineCard" style="display:none">
-      <div class="build-head">⛏️ Mine de pierre</div>
+      <div class="build-head">⛏️ Mine</div>
       <div class="build-desc">Coût: <b>8 or + 5 bois + 1 pop</b> • 8s • Rendement: <b>+0,1 pierre / clic</b> • Adjacent à une 🪨</div>
       <div class="build-bar"><div class="build-fill" id="mineFill"></div></div>
       <div class="build-actions">
@@ -91,23 +87,11 @@
         <span class="small muted" id="mineMsg">—</span>
       </div>
     </div>
-
-    <!-- Contremaître -->
-    <div class="build-card" id="foremanCard">
-      <div class="build-head">🧱 Contremaître</div>
-      <div class="build-desc">Coût: <b>10 or, 10 bois, 3 pop</b> • Clique 1×/s sur producteurs (or/bois/blé/pierre) • <b>Consomme 5 blé/min</b></div>
-      <div class="build-actions">
-        <button class="btn" id="buildForemanBtn">Construire</button>
-        <button class="btn" id="toggleForemanBtn" style="display:none">Pause</button>
-        <span class="small muted" id="foremanMsg">—</span>
-      </div>
-    </div>
   </aside>
 </main>
 
-<script type="module" src="js/main.js"></script>
-
-<div id="menuModal" class="modal" style="display:none">
+<!-- Menu/Admin modal -->
+<div id="menuModal" class="modal">
   <div class="modal-backdrop" id="menuBackdrop"></div>
   <div class="modal-content">
     <div class="modal-header">
@@ -123,51 +107,18 @@
       <div class="modal-section" id="adminSection">
         <h3>Admin (dev)</h3>
         <div class="admin-grid">
-          <div>
-            <label>Or</label>
-            <div class="row">
-              <input id="goldAmt" type="number" value="100" />
-              <button id="addGoldBtn" class="btn">+ Ajouter</button>
-              <button id="addGold1k" class="btn">+1000</button>
-            </div>
-          </div>
-          <div>
-            <label>Bois</label>
-            <div class="row">
-              <input id="woodAmt" type="number" value="100" />
-              <button id="addWoodBtn" class="btn">+ Ajouter</button>
-              <button id="addWood1k" class="btn">+1000</button>
-            </div>
-          </div>
-          <div>
-            <label>Pierre</label>
-            <div class="row">
-              <input id="stoneAmt" type="number" value="100" />
-              <button id="addStoneBtn" class="btn">+ Ajouter</button>
-              <button id="addStone1k" class="btn">+1000</button>
-            </div>
-          </div>
-          <div>
-            <label>Blé</label>
-            <div class="row">
-              <input id="wheatAmt" type="number" value="100" />
-              <button id="addWheatBtn" class="btn">+ Ajouter</button>
-              <button id="addWheat1k" class="btn">+1000</button>
-            </div>
-          </div>
-          <div>
-            <label>Population</label>
-            <div class="row">
-              <input id="popAmt" type="number" value="1" />
-              <button id="addPopBtn" class="btn">+ Ajouter</button>
-            </div>
-          </div>
+          <div><label>Or</label><div class="row"><input id="goldAmt" type="number" value="100" /><button id="addGoldBtn" class="btn">+ Ajouter</button><button id="addGold1k" class="btn">+1000</button></div></div>
+          <div><label>Bois</label><div class="row"><input id="woodAmt" type="number" value="100" /><button id="addWoodBtn" class="btn">+ Ajouter</button><button id="addWood1k" class="btn">+1000</button></div></div>
+          <div><label>Pierre</label><div class="row"><input id="stoneAmt" type="number" value="100" /><button id="addStoneBtn" class="btn">+ Ajouter</button><button id="addStone1k" class="btn">+1000</button></div></div>
+          <div><label>Blé</label><div class="row"><input id="wheatAmt" type="number" value="100" /><button id="addWheatBtn" class="btn">+ Ajouter</button><button id="addWheat1k" class="btn">+1000</button></div></div>
+          <div><label>Population</label><div class="row"><input id="popAmt" type="number" value="1" /><button id="addPopBtn" class="btn">+ Ajouter</button></div></div>
         </div>
-        <p class="small muted">Astuce: la stamina par type se régénère automatiquement (+5/s).</p>
+        <p class="small muted">Astuce: la stamina remonte +5/s.</p>
       </div>
     </div>
   </div>
 </div>
 
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -5,9 +5,7 @@ export const CONFIG = {
   FIELD:  { costGold: 5, buildTimeMs: 4000 },
   CAMP:   { costGold: 8, buildTimeMs: 6000 },
   MINE:   { costGold: 8, costWood: 5, buildTimeMs: 8000 },
-  WARE:   { }, /* not used in clicker v1 */
   STORAGE: { woodCap: 10, stoneCap: 10 },
-  FOREMAN: { costGold: 10, costWood: 10, popCost: 3, speedPerLevel: 1 },
   CLICK: {
     base: { castle: 0.1, field: 0.1, camp: 0.1, mine: 0.1 },
     levelBonusPct: 10,
@@ -19,5 +17,5 @@ export const CONFIG = {
     holdMs: 500,
     holdMult: 3.0
   },
-  SAVE_KEY: 'CONQUETE_CLICKER_V1',
+  SAVE_KEY: 'CONQ_CLICKER_V11',
 };

@@ -79,3 +79,12 @@ export function upsertMinesCard(){
   card.querySelector('.prod-label').textContent = `Niv ${state.levels.mine} • +${yieldPerClick('mine')} pierre / clic`;
   card.querySelector('.prod-fill').style.width = staminaWidth('mine') + '%';
 }
+
+export function refreshStaminaBars(){
+  const map=[['castle','[data-kind="castle"]'],['house','[data-kind="house"]'],['field','[data-kind="field"]'],['camp','[data-kind="camp"]'],['mine','[data-kind="mine"]']];
+  map.forEach(([k,sel])=>{
+    const card = left.querySelector(sel); if(!card) return;
+    const bar = card.querySelector('.prod-fill'); if(!bar) return;
+    bar.style.width = (k==='house'?100:(state.stamina[k]||0)) + '%';
+  });
+}
