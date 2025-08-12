@@ -4,6 +4,7 @@ const left = document.getElementById('leftPanel');
 export function clearPanel(){ left.innerHTML=''; }
 
 export function upsertCastleCard(){
+  if(!state.castleBuilt){ const c=left.querySelector('[data-kind="castle"]'); if(c) c.remove(); return; } /* FIX: hide castle if not built */
   let card = left.querySelector('[data-kind="castle"]');
   if(!card){
     card=document.createElement('div'); card.className='building-card'; card.dataset.kind='castle';
