@@ -825,7 +825,7 @@ function updatePP(){ text('pp', state.prestigePoints); if(ppHdr) ppHdr.textConte
 
 function renderSkillTree(){
   const root = byId('skillTree'); if(!root) return; root.innerHTML='';
-  SKILL_TREE.forEach(t=>{
+  CONFIG.CONFIG.SKILL_TREE.forEach(t=>{
     const tierBox=document.createElement('div'); tierBox.className='skill-tier';
     const lbl=document.createElement('div'); lbl.className='label';
     const takenInTier = Object.keys(state.prestigeTaken).filter(id=>id.startsWith('t'+t.tier+':')).length;
@@ -847,7 +847,7 @@ function renderSkillTree(){
 }
 function isTierAvailable(tier){
   if(tier===1) return true;
-  const prev = SKILL_TREE.find(x=>x.tier===tier-1);
+  const prev = CONFIG.SKILL_TREE.find(x=>x.tier===tier-1);
   const takenPrev = Object.keys(state.prestigeTaken).filter(id=>id.startsWith('t'+(tier-1)+':')).length;
   return takenPrev >= (prev? prev.reqTaken : 0);
 }
