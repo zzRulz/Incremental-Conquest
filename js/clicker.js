@@ -60,12 +60,19 @@ export function handleClickUp(e){
 
   if(kind==='house' || kind==='tree' || kind==='rock') return;
 
+  // kindKey already defined above
+  const cost = CONFIG.CLICK.staminaCost;
+  if((state.stamina[kindKey]||0) < cost){
+    showFloat(idx, 'épuisé');
+    return; // HARD STAMINA GATE
+  }
+
   let mult = 1;
   if(held >= CONFIG.CLICK.holdMs) mult *= CONFIG.CLICK.holdMult;
   const crit = Math.random() < CONFIG.CLICK.critChance;
   if(crit) mult *= CONFIG.CLICK.critMult;
 
-  const kindKey = (kind==='field'?'field': kind==='camp'?'camp': kind==='mine'?'mine':'castle');
+  // kindKey already defined above
   const per = perClick(kindKey) * staminaFactor(kindKey) * mult;
 
   if(kindKey==='castle'){ setState({ gold: state.gold + per }); upsertCastleCard(); showFloat(idx, `+${per.toFixed(2)} or`, crit); }

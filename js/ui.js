@@ -12,6 +12,8 @@ const prestigeEl = document.getElementById('prestige');
 const modeBtn = document.getElementById('modeBtn');
 const soundBtn = document.getElementById('soundBtn');
 const prestigeBtn = document.getElementById('prestigeBtn');
+const adminBtn = document.getElementById('adminBtn');
+const adminSection = document.getElementById('adminSection');
 const menuBtn = document.getElementById('menuBtn');
 const menuModal = document.getElementById('menuModal');
 const menuBackdrop = document.getElementById('menuBackdrop');
@@ -39,6 +41,8 @@ export function initUI(){
   if(menuClose){ menuClose.addEventListener('click', ()=> menuModal.classList.remove('open')); }
   if(menuBackdrop){ menuBackdrop.addEventListener('click', ()=> menuModal.classList.remove('open')); }
   if(resetBtn){ resetBtn.addEventListener('click', ()=>{ if(confirm('Réinitialiser la partie ?')){ try{ localStorage.removeItem('CONQUETE_CLICKER_V1'); }catch(_){} location.reload(); } }); }
+  // Admin button
+  if(adminBtn){ adminBtn.addEventListener('click', ()=>{ menuModal.classList.add('open'); setTimeout(()=>{ adminSection && adminSection.scrollIntoView({behavior:'smooth', block:'start'}); }, 50); }); }
   // Admin adds
   if(addGoldBtn){ addGoldBtn.addEventListener('click', ()=>{ const v=parseFloat(goldAmt.value)||0; setState({ gold: state.gold + v }); }); }
   if(addGold1k){ addGold1k.addEventListener('click', ()=> setState({ gold: state.gold + 1000 })); }

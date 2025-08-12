@@ -44,3 +44,6 @@ header h1{font-size:18px; margin:0 10px 0 0}
 .admin-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px }
 .row{ display:flex; gap:8px; align-items:center }
 .modal input{ background:#0f1420; color:#e6e8eb; border:1px solid #2a3245; border-radius:8px; padding:8px; width:110px }
+
+/* depleted note could reuse default color; class reserved */
+.float-num.depleted{ opacity:.9 }
