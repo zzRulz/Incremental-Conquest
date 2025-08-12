@@ -6,7 +6,7 @@
 /* ===================== CONFIG ===================== */
 const CONFIG = {
 // === Prestige Skill Tree (tiered) ===
-SKILL_TREE:  [
+CONFIG.SKILL_TREE:  [
   { tier:1, reqTaken:0, nodes:[
     { id:'foreman',  name:'Contremaître',   cost:1, effect:'foremanUnlock', desc:'Débloque le contremaître' },
     { id:'stamina1', name:'Stamina I',      cost:1, effect:'staminaRegen+2', desc:'+2 regen stamina/s' },
@@ -825,7 +825,7 @@ function updatePP(){ text('pp', state.prestigePoints); if(ppHdr) ppHdr.textConte
 
 function renderSkillTree(){
   const root = byId('skillTree'); if(!root) return; root.innerHTML='';
-  CONFIG.CONFIG.SKILL_TREE.forEach(t=>{
+  CONFIG.SKILL_TREE.forEach(t=>{
     const tierBox=document.createElement('div'); tierBox.className='skill-tier';
     const lbl=document.createElement('div'); lbl.className='label';
     const takenInTier = Object.keys(state.prestigeTaken).filter(id=>id.startsWith('t'+t.tier+':')).length;
