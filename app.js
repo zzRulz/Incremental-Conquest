@@ -6,7 +6,7 @@
 /* ===================== CONFIG ===================== */
 const CONFIG = {
 // === Prestige Skill Tree (tiered) ===
-const SKILL_TREE = [
+SKILL_TREE:  [
   { tier:1, reqTaken:0, nodes:[
     { id:'foreman',  name:'Contremaître',   cost:1, effect:'foremanUnlock', desc:'Débloque le contremaître' },
     { id:'stamina1', name:'Stamina I',      cost:1, effect:'staminaRegen+2', desc:'+2 regen stamina/s' },
@@ -37,7 +37,7 @@ const SKILL_TREE = [
     { id:'foreman3', name:'Auto II',        cost:4, effect:'foreSpeed+0.35', desc:'+35% vitesse auto' },
     { id:'stamina3', name:'Stamina III',    cost:4, effect:'staminaMax+30', desc:'+30 stamina max' },
   ]},
-];
+],
 
   VERSION: { major:2, minor:3, suffix:'d' },
   GRID: { cols: 15, rows: 11, startRadius: 2 },
