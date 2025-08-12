@@ -5,7 +5,7 @@
 
 /* ===================== CONFIG ===================== */
 const CONFIG = {
-  VERSION: { major:2, minor:3, suffix:'a' },
+  VERSION: { major:2, minor:3, suffix:'d' },
   GRID: { cols: 15, rows: 11, startRadius: 2 },
   CLICK: {
     base: { castle: 0.1, field: 0.1, camp: 0.1, mine: 0.1, mill: 0, library: 0.1 },
@@ -107,8 +107,10 @@ window.addEventListener('beforeunload', save);
 
 /* ===================== GRID ===================== */
 const board = document.getElementById('board');
-const zoneRSpan = document.getElementById('zoneR');
 const zoneNameEl = document.getElementById('zoneName');
+const zoneLvlEl = document.getElementById('zoneLvl');
+const prestigeHdr = document.getElementById('prestigeHeader');
+const ppHdr = document.getElementById('ppHeader');
 const cols = CONFIG.GRID.cols, rows = CONFIG.GRID.rows;
 const centerR = Math.floor(rows/2), centerC = Math.floor(cols/2);
 function idx(r,c){ return r*cols+c; }
@@ -130,8 +132,8 @@ function initGrid(){
       board.appendChild(cell);
     }
   }
-  zoneRSpan.textContent = state.zoneRadius;
-  zoneNameEl.textContent = state.zoneName;
+  if(zoneNameEl) zoneNameEl.textContent = state.zoneName;
+  if(zoneLvlEl) zoneLvlEl.textContent = state.zoneLevel;
 }
 function getRandomFreeCell(inZone=true){
   const free=[];
@@ -190,7 +192,7 @@ function repaintFromState(){
   state.warePositions.forEach(i=>{ placeEmoji(i,'📦','warehouse'); });
   state.marketPositions.forEach(i=>{ placeEmoji(i,'🏪','market'); });
   state.libraryPositions.forEach(i=>{ placeEmoji(i,'📚','library', onClickUp); });
-  setDepletedClass();
+  setDepletedClass(); reevaluateUnlocks(); updatePrestigeReady();
 }
 function setDepletedClass(){
   const nodes=board.children;
@@ -276,12 +278,46 @@ function upsert(kind, icon, title, usesStamina){
   bar.style.width = usesStamina ? staminaWidth(kind) + '%' : '100%';
 }
 function refreshAll(){
+function updatePrestigeReady(){
+  const btn = document.getElementById('goPrestigeBtn');
+  if(!btn) return;
+  const ready = state.castleBuilt && state.castleLevel >= 10;
+  btn.style.display = ready ? '' : 'none';
+}
+
+function isUnlocked(kind){
+  switch(kind){
+    case 'house': return state.castleBuilt;
+    case 'field': return state.castleBuilt && state.pop >= 1; // nécessite au moins 1 maison
+    case 'camp':  return state.prestige >= 2 && state.fields >= 1 && state.treePositions.length>0; // arbres + champ
+    case 'mine':  return state.camps >= 1 && (state.tech['mining'] || state.zoneLevel >= 3 || state.totals.wood >= 100);
+    case 'mill':  return state.fields >= 2 && state.castleLevel >= 2;
+    case 'warehouse': return (state.wood >= state.woodCap*0.6) || (state.totals.wood >= 50);
+    case 'market': return (state.totals.gold >= 100) || (state.castleLevel >= 2);
+    case 'library': return (state.totals.gold >= 200) || (state.markets >= 1);
+    case 'foreman': return !!state.achievements['foremanUnlock'] || state.foreman.built;
+    default: return false;
+  }
+}
+function reevaluateUnlocks(){
+  // Toggle build cards visibility
+  const map = {
+    house:'houseCard', field:'fieldCard', camp:'campCard', mine:'mineCard', mill:'millCard',
+    warehouse:'warehouseCard', market:'marketCard', library:'libraryCard', foreman:'foremanCard'
+  };
+  Object.entries(map).forEach(([k,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.style.display = isUnlocked(k) ? '' : 'none';
+  });
+}
+
   upsert('castle','🏰','Château', true);
   upsert('house','🏠','Maisons', false);
   upsert('field','🌾','Champs', true);
   upsert('camp','🪓','Camps', true);
   upsert('mine','⛏️','Mines', true);
-  setDepletedClass();
+  setDepletedClass(); reevaluateUnlocks(); updatePrestigeReady();
 }
 
 /* ===================== CLICKER ===================== */
@@ -336,6 +372,7 @@ function onClickUp(e){
 /* ===================== BUILDINGS (RIGHT) ===================== */
 function setupBuildButtons(){
   byId('buildCastleBtn').addEventListener('click', buildCastle);
+  var goP=document.getElementById('goPrestigeBtn'); if(goP){ goP.addEventListener('click', ()=> openModal('prestigeModal')); }
   byId('buildHouseBtn').addEventListener('click', buildHouse);
   byId('buildFieldBtn').addEventListener('click', buildField);
   byId('buildCampBtn').addEventListener('click', buildCamp);
@@ -353,13 +390,7 @@ function setupBuildButtons(){
   byId('toggleForemanBtn').addEventListener('click', toggleForeman);
   byId('upgradeForemanBtn').addEventListener('click', upgradeForeman);
 }
-function unlockAfterCastle(){
-  show('houseCard'); show('fieldCard'); show('campCard'); show('mineCard'); show('millCard'); show('warehouseCard'); show('marketCard'); show('libraryCard');
-  byId('marketUI').style.display = state.markets>0 ? '' : 'none';
-  // foreman card visible if unlocked in prestige or already built
-  show('foremanCard');
-  updateForemanUI();
-}
+function unlockAfterCastle(){ reevaluateUnlocks(); updateForemanUI(); }
 function buildCastle(){
   if(state.castleBuilt) return;
   progressFill('castleFill', 6000);
@@ -369,7 +400,7 @@ function buildCastle(){
     placeEmoji(ci,'🏰','castle', onClickUp); board.children[ci].addEventListener('mousedown', onClickDown);
     setState({ castleBuilt:true });
     unlockAfterCastle();
-    refreshAll(); placeNaturalResources();
+    refreshAll(); placeNaturalResources(); updatePrestigeReady();
   }, CONFIG.COSTS.CASTLE.timeMs);
 }
 function buildHouse(){
@@ -512,7 +543,7 @@ function tickMarketDrift(){
 /* ===================== FOREMAN (auto) ===================== */
 function updateForemanUI(){
   const card=byId('foremanCard'); if(!card) return;
-  card.style.display = state.castleBuilt ? '' : 'none';
+  card.style.display = isUnlocked('foreman') ? '' : 'none';
   if(state.foreman.built){
     show('toggleForemanBtn'); show('upgradeForemanBtn'); hide('buildForemanBtn');
     text('foremanMsg', `Niv ${state.foreman.level} • ${state.foreman.clicksPerSec.toFixed(1)} clic/s • Conso ${state.foreman.wheatPerMin}/min`);
@@ -629,7 +660,7 @@ function renderZones(){
       btn.addEventListener('click', ()=>{
         if((state.gold||0)<(c.gold||0)||(state.wood||0)<(c.wood||0)||(state.stone||0)<(c.stone||0)||(state.wheat||0)<(c.wheat||0)) return;
         setState({ gold: state.gold-(c.gold||0), wood: state.wood-(c.wood||0), stone: state.stone-(c.stone||0), wheat: state.wheat-(c.wheat||0), zoneLevel: z.id, zoneRadius: state.zoneRadius+1, zoneBonus: z.bonus, zoneName: z.name });
-        placeNaturalResources(); repaintFromState(); refreshAll(); zoneNameEl.textContent=z.name; renderZones();
+        placeNaturalResources(); repaintFromState(); refreshAll(); if(zoneNameEl) zoneNameEl.textContent = z.name; if(zoneLvlEl) zoneLvlEl.textContent = state.zoneLevel; renderZones();
       });
       el.appendChild(btn);
     } else { const tag=document.createElement('div'); tag.className='small muted'; tag.textContent='Active'; el.appendChild(tag); }
@@ -706,6 +737,7 @@ function resetForPrestige(){
   repaintFromState(); refreshAll(); updateForemanUI(); updatePP();
 }
 function doPrestige(){
+  if(state.castleLevel < 10){ alert('Prestige verrouillé: Château niveau 10 requis.'); return; }
   const pointsGained = Math.floor(Math.max(0, state.gold)/100);
   state.prestigePoints += pointsGained;
   resetForPrestige();
@@ -821,6 +853,8 @@ function addResourceHandlers(){
   byId('bumpPatch').addEventListener('click', ()=>{ bumpPatch(state.version); versionEl.textContent=`v${state.version.major}.${state.version.minor}${state.version.suffix}`; });
 }
 function refreshHeader(){
+  if(prestigeHdr) prestigeHdr.textContent = state.prestige;
+  if(ppHdr) ppHdr.textContent = state.prestigePoints;
   goldEl.textContent=(Math.round(state.gold*100)/100).toString();
   woodEl.textContent=Math.floor(state.wood);
   stoneEl.textContent=Math.floor(state.stone);

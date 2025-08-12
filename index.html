@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Conquête Clicker v2.3a</title>
+  <title>Conquête Clicker v2.3d</title>
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/board.css" />
   <link rel="stylesheet" href="styles/panels.css" />
@@ -12,7 +12,7 @@
 <header class="header">
   <div class="brand">
     <div class="title">Conquête Clicker</div>
-    <div class="ver" id="version">v2.3a</div>
+    <div class="ver" id="version">v2.3d</div>
   </div>
   <div class="resources">
     <div class="pill" title="Or"><span>🪙</span><b id="gold">0</b></div>
@@ -42,7 +42,7 @@
 
   <section>
     <div class="topbar">
-      <div>Zone: <b id="zoneR">2</b> • <span id="zoneName">Campement</span></div>
+      <div>⭐ Prestige : <b id="prestigeHeader">0</b> • Points : <b id="ppHeader">0</b></div>
     </div>
     <div id="board" class="board"></div>
   </section>
@@ -53,7 +53,7 @@
       <div class="build-head">🏰 Château (clic: or)</div>
       <div class="build-desc">Construction: 6s • Débloque tout le village</div>
       <div class="build-bar"><div class="build-fill" id="castleFill"></div></div>
-      <div class="build-actions"><button class="btn primary" id="buildCastleBtn">Construire</button><span class="small muted" id="castleMsg">—</span></div>
+      <div class="build-actions"><button class="btn primary" id="buildCastleBtn">Construire</button><button class="btn danger blink" id="goPrestigeBtn" style="display:none">⭐ Prestige</button><span class="small muted" id="castleMsg">—</span></div>
     </div>
 
     <div class="build-card" id="houseCard" style="display:none">
