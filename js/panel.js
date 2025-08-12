@@ -2,9 +2,18 @@ import { state } from './state.js';
 const left = document.getElementById('leftPanel');
 
 export function clearPanel(){ left.innerHTML=''; }
+export function updateStaminaBars(){
+  const map=[['castle','[data-kind="castle"]'],['house','[data-kind="house"]'],['field','[data-kind="field"]'],['camp','[data-kind="camp"]'],['mine','[data-kind="mine"]']];
+  map.forEach(([k,sel])=>{
+    const card = left.querySelector(sel); if(!card) return;
+    const bar = card.querySelector('.prod-fill'); if(!bar) return;
+    const val = (k==='house')?100:(state.stamina[k]||0);
+    bar.style.width = Math.max(0, Math.min(100, val)) + '%';
+  });
+}
+
 
 export function upsertCastleCard(){
-  if(!state.castleBuilt){ const c=left.querySelector('[data-kind="castle"]'); if(c) c.remove(); return; } /* FIX: hide castle if not built */
   let card = left.querySelector('[data-kind="castle"]');
   if(!card){
     card=document.createElement('div'); card.className='building-card'; card.dataset.kind='castle';
@@ -14,7 +23,7 @@ export function upsertCastleCard(){
     left.appendChild(card);
   }
   card.querySelector('.prod-label').textContent = `+${state.castleLevel} or / ${state.mode==='debug'?'2s':'60s'} (+${state.prestige*5}%)`;
-  animateFill(card.querySelector('.prod-fill'), state.mode==='debug'?2000:60000);
+  updateStaminaBars();
 }
 export function upsertHousesCard(){
   if(state.houses<=0){ const c=left.querySelector('[data-kind="house"]'); if(c) c.remove(); return; } /* FIX: hide if none */
@@ -29,7 +38,7 @@ export function upsertHousesCard(){
   card.querySelector('.count').textContent = state.houses;
   const upkeep = 0.5*state.houses;
   card.querySelector('.prod-label').textContent = `Entretien −${upkeep} or / ${state.mode==='debug'?'2s':'60s'}`;
-  animateConsume(card.querySelector('.prod-fill'), state.mode==='debug'?2000:60000);
+  updateStaminaBars();
 }
 export function upsertFieldsCard(){
   if(state.fields<=0){ const c=left.querySelector('[data-kind="field"]'); if(c) c.remove(); return; }
@@ -44,7 +53,7 @@ export function upsertFieldsCard(){
   card.querySelector('.count').textContent = state.fields;
   const prod = 0.5*state.fields;
   card.querySelector('.prod-label').textContent = `+${prod} or / ${state.mode==='debug'?'2s':'60s'} (+${state.prestige*5}%)`;
-  animateFill(card.querySelector('.prod-fill'), state.mode==='debug'?2000:60000);
+  updateStaminaBars();
 }
 export function upsertCampsCard(){
   if(state.camps<=0){ const c=left.querySelector('[data-kind="camp"]'); if(c) c.remove(); return; }
@@ -58,7 +67,7 @@ export function upsertCampsCard(){
   }
   card.querySelector('.count').textContent = state.camps;
   card.querySelector('.prod-label').textContent = `+${state.camps} bois / ${state.mode==='debug'?'2s':'30s'} (+${state.prestige*5}%)`;
-  animateFill(card.querySelector('.prod-fill'), state.mode==='debug'?2000:30000);
+  updateStaminaBars();
 }
 export function upsertMinesCard(){
   if(state.mines<=0){ const c=left.querySelector('[data-kind="mine"]'); if(c) c.remove(); return; }
@@ -72,7 +81,7 @@ export function upsertMinesCard(){
   }
   card.querySelector('.count').textContent = state.mines;
   card.querySelector('.prod-label').textContent = `+${state.mines} pierre / ${state.mode==='debug'?'2s':'30s'} (+${state.prestige*5}%)`;
-  animateFill(card.querySelector('.prod-fill'), state.mode==='debug'?2000:30000);
+  updateStaminaBars();
 }
 export function upsertWarehousesCard(){
   if(state.warehouses<=0){ const c=left.querySelector('[data-kind="ware"]'); if(c) c.remove(); return; }

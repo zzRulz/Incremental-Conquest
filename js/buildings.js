@@ -121,13 +121,15 @@ function buildHouse(){
   }, CONFIG.HOUSE.buildTimeMs);
 }
 
+
 function buildField(){
   if (state.gold < CONFIG.FIELD.costGold){ fieldMsg.textContent=`Pas assez d’or (${CONFIG.FIELD.costGold}).`; return; }
-  setState({ gold: state.gold - CONFIG.FIELD.costGold });
-  buildFieldBtn.disabled=true;
-  fieldFill.style.transition='none'; fieldFill.style.width='0%';
+  if (state.pop < 1){ fieldMsg.textContent='Population insuffisante (1).'; return; }
+  setState({ gold: state.gold - CONFIG.FIELD.costGold, pop: state.pop - 1 });
+  buildFieldBtn.disabled=true; fieldFill.style.transition='none'; fieldFill.style.width='0%';
   requestAnimationFrame(()=>{ fieldFill.style.transition='width 4s linear'; fieldFill.style.width='100%'; });
   setTimeout(()=>{
+
     buildFieldBtn.disabled=false; fieldFill.style.transition='none'; fieldFill.style.width='0%';
     const i = getRandomFreeCell(true); if(i===null){ fieldMsg.textContent='Plus d’emplacements libres !'; return; }
     placeEmoji(i,'🌾','field'); occupy(i); state.fieldPositions.push(i);
@@ -138,7 +140,7 @@ function buildField(){
 function buildCamp(){
   if (!state.firstHouse){ campMsg.textContent='Construis d’abord une maison.'; return; }
   if (state.gold < CONFIG.CAMP.costGold){ campMsg.textContent=`Pas assez d’or (${CONFIG.CAMP.costGold}).`; return; }
-  if (state.pop < CONFIG.CAMP.popCost){ campMsg.textContent=`Population insuffisante (${CONFIG.CAMP.popCost}).`; return; }
+  if (state.pop < CONFIG.CAMP.popCost){ campMsg.textContent=`Population insuffisante (1).`; return; }
   if (state.treePositions.length<=0){ campMsg.textContent='Aucun arbre (prestige pour en faire apparaître).'; return; }
   setState({ gold: state.gold - CONFIG.CAMP.costGold, pop: state.pop - CONFIG.CAMP.popCost });
   buildCampBtn.disabled=true;
@@ -152,17 +154,15 @@ function buildCamp(){
   }, CONFIG.CAMP.buildTimeMs);
 }
 
+
 function buildMine(){
-  if (!state.firstHouse){ mineMsg.textContent='Construis d’abord une maison.'; return; }
-  if (state.prestige < 3){ mineMsg.textContent='Prestige 3 requis.'; return; }
-  if (state.rockPositions.length<=0){ mineMsg.textContent='Aucune pierre disponible.'; return; }
   if (state.gold < CONFIG.MINE.costGold || state.wood < CONFIG.MINE.costWood){ mineMsg.textContent=`Coût: ${CONFIG.MINE.costGold} or + ${CONFIG.MINE.costWood} bois.`; return; }
-  if (state.pop < CONFIG.MINE.popCost){ mineMsg.textContent=`Population insuffisante (${CONFIG.MINE.popCost}).`; return; }
-  setState({ gold: state.gold - CONFIG.MINE.costGold, wood: state.wood - CONFIG.MINE.costWood, pop: state.pop - CONFIG.MINE.popCost });
-  buildMineBtn.disabled=true;
-  mineFill.style.transition='none'; mineFill.style.width='0%';
+  if (state.pop < 1){ mineMsg.textContent='Population insuffisante (1).'; return; }
+  setState({ gold: state.gold - CONFIG.MINE.costGold, wood: state.wood - CONFIG.MINE.costWood, pop: state.pop - 1 });
+  buildMineBtn.disabled=true; mineFill.style.transition='none'; mineFill.style.width='0%';
   requestAnimationFrame(()=>{ mineFill.style.transition='width 8s linear'; mineFill.style.width='100%'; });
   setTimeout(()=>{
+
     buildMineBtn.disabled=false; mineFill.style.transition='none'; mineFill.style.width='0%';
     const i = getRandomFreeCell(true); if(i===null){ mineMsg.textContent='Plus d’emplacements libres !'; return; }
     placeEmoji(i,'⛏️','mine'); occupy(i); state.minePositions.push(i);
@@ -182,4 +182,27 @@ function buildWarehouse(){
     setState({ warehouses: state.warehouses + 1, woodCap: state.woodCap + CONFIG.WARE.capPlus, stoneCap: state.stoneCap + CONFIG.WARE.capPlus });
     upsertWarehousesCard();
   }, CONFIG.WARE.buildTimeMs);
+}
+
+
+/* Foreman */
+const buildForemanBtn = document.getElementById('buildForemanBtn');
+const toggleForemanBtn = document.getElementById('toggleForemanBtn');
+const foremanMsg = document.getElementById('foremanMsg');
+if(buildForemanBtn){
+  buildForemanBtn.addEventListener('click', ()=>{
+    if(state.foremanBuilt){ foremanMsg.textContent='Déjà construit.'; return; }
+    if(state.gold < CONFIG.FOREMAN.costGold || state.wood < CONFIG.FOREMAN.costWood || state.pop < CONFIG.FOREMAN.popCost){
+      foremanMsg.textContent = `Coût: ${CONFIG.FOREMAN.costGold} or, ${CONFIG.FOREMAN.costWood} bois, ${CONFIG.FOREMAN.popCost} pop.`;
+      return;
+    }
+    setState({ gold: state.gold - CONFIG.FOREMAN.costGold, wood: state.wood - CONFIG.FOREMAN.costWood, pop: state.pop - CONFIG.FOREMAN.popCost, foremanBuilt:true, foremanLevel:1, foremanOn:true });
+    buildForemanBtn.style.display='none'; toggleForemanBtn.style.display='inline-block'; foremanMsg.textContent='En service';
+  });
+  toggleForemanBtn.addEventListener('click', ()=>{
+    if(!state.foremanBuilt) return;
+    setState({ foremanOn: !state.foremanOn });
+    toggleForemanBtn.textContent = state.foremanOn ? 'Pause' : 'Reprendre';
+    foremanMsg.textContent = state.foremanOn ? 'En service' : 'En pause';
+  });
 }

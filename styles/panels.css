@@ -12,12 +12,3 @@
 .build-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
 .build-bar{ height:8px; background:#0f1420; border-radius:5px; overflow:hidden }
 .build-fill{ height:100%; background:var(--accent); width:0% }
-
-/* === Unify right build menu look with left building cards === */
-.build-card{ background:#171a21; border:1px solid #2a3245; border-radius:10px; padding:10px; margin-bottom:12px; box-shadow:none }
-.build-head{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:bold }
-.build-desc{ color:var(--muted); font-size:13px; margin:6px 0 }
-.build-actions{ display:flex; align-items:center; gap:8px; margin-top:8px }
-.build-bar{ height:8px; background:#0f1420; border-radius:5px; overflow:hidden; margin-top:6px }
-.build-fill{ height:100%; background:var(--accent-2); width:0% }
-.build-fill.consume{ background:linear-gradient(90deg, #ff9898, #ff4f4f) }

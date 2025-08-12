@@ -15,9 +15,10 @@
   <h1>Châteaux & Champs</h1>
   <div class="stat">Or: <span id="gold">0</span></div>
   <div class="stat">Bois: <span id="wood">0</span> / <span id="woodCap">10</span></div>
+  <div class="stat">Blé: <span id="wheat">0</span></div>
   <div class="stat">Pierre: <span id="stone">0</span> / <span id="stoneCap">10</span></div>
   <div class="stat">Pop: <span id="pop">0</span></div>
-  <div class="stat small">💰 /tick: <span id="income" class="neu">0</span></div>
+  <div class="stat small">💰 /clic: <span id="income" class="neu">0</span></div>
   <div class="stat small">⭐ Prestige: <span id="prestige">0</span></div>
   <div class="mode">
     <button id="modeBtn" class="btn">Mode: Debug (2s)</button>
@@ -101,6 +102,17 @@
       <div class="build-actions">
         <button class="btn" id="buildWarehouseBtn">Construire</button>
         <span class="small muted" id="warehouseMsg">—</span>
+      </div>
+    </div>
+  
+    <!-- Contremaître -->
+    <div class="build-card" id="foremanCard" style="display:block">
+      <div class="build-head">🧱 Contremaître</div>
+      <div class="build-desc">Coût: 10 or, 10 bois, 3 pop • Clique 1×/s sur tous les bâtiments producteurs • Consomme <b>5 blé/min</b> • (On/Off)</div>
+      <div class="build-actions">
+        <button class="btn" id="buildForemanBtn">Construire</button>
+        <button class="btn" id="toggleForemanBtn" style="display:none">Pause</button>
+        <span class="small muted" id="foremanMsg">—</span>
       </div>
     </div>
   </aside>

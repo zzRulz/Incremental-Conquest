@@ -7,52 +7,35 @@ import { setZzz, clearZzz } from './resources.js';
 let goldTimer=null, resTimer=null;
 
 export function startTimers(){
-  restartGold(); restartRes();
-  on('state:changed', (s)=>{
-    const modeDurGold = s.mode==='debug'?CONFIG.TICKS.goldDebug:CONFIG.TICKS.goldNormal;
-    const modeDurRes = s.mode==='debug'?CONFIG.TICKS.resDebug:CONFIG.TICKS.resNormal;
-    if (goldTimer && goldTimer._dur!==modeDurGold) restartGold();
-    if (resTimer && resTimer._dur!==modeDurRes) restartRes();
-    // refresh left bars
-    upsertCastleCard(); upsertHousesCard(); upsertFieldsCard(); upsertCampsCard(); upsertMinesCard(); upsertWarehousesCard();
-  });
-}
-
-function restartGold(){
-  if (goldTimer) clearInterval(goldTimer);
-  const interval = state.mode==='debug'?CONFIG.TICKS.goldDebug:CONFIG.TICKS.goldNormal;
-  goldTimer = setInterval(()=>{
-    if (!state.castleBuilt) return;
-    const g = state.gold + state.incomePerTick;
-    setState({ gold: g });
-    const center = document.getElementById('centerCell');
-    if (center){
-      const fx = document.createElement('div');
-      fx.className='gold-float'; fx.textContent = `${state.incomePerTick>=0?'+':''}${Math.round(state.incomePerTick*100)/100}`;
-      fx.style.color = state.incomePerTick>=0 ? 'gold' : '#ff9a9a';
-      center.appendChild(fx); setTimeout(()=>fx.remove(), 1000);
+  // Only keep autosave, stamina regen, and foreman automation
+  setInterval(()=>{ try{ window.save && window.save(); }catch(_){ } }, 5000);
+  setInterval(()=>{
+    const max=CONFIG.CLICK.staminaMax, regen=CONFIG.CLICK.staminaRegenPerSec;
+    state.stamina.castle = Math.min(max, (state.stamina.castle||0)+regen);
+    state.stamina.field  = Math.min(max, (state.stamina.field||0)+regen);
+    state.stamina.camp   = Math.min(max, (state.stamina.camp||0)+regen);
+    state.stamina.mine   = Math.min(max, (state.stamina.mine||0)+regen);
+  }, 1000);
+  setInterval(()=>{
+    if(!state.foremanBuilt || !state.foremanOn) return;
+    const clicksPerSec = CONFIG.FOREMAN.speedPerLevel * Math.max(1, state.foremanLevel||1);
+    // wheat consumption: 5 per minute
+    const consumePerSec = 5/60;
+    if(state.wheat < consumePerSec){ return; }
+    // pay
+    setState({ wheat: state.wheat - consumePerSec });
+    // naive: one click each on all producers per second
+    const board = document.getElementById('board');
+    const toClick = [...state.fieldPositions, ...state.campPositions, ...state.minePositions];
+    toClick.forEach(i=>{
+      const el = board.children[i];
+      if(!el) return;
+      el.dispatchEvent(new Event('mouseup')); // simulate quick click
+    });
+    // castle too
+    if(state.castleBuilt){
+      const cc = document.getElementById('centerCell');
+      if(cc) cc.dispatchEvent(new Event('mouseup'));
     }
-    beep(880, 0.08);
-  }, interval);
-  goldTimer._dur = interval;
-}
-
-function restartRes(){
-  if (resTimer) clearInterval(resTimer);
-  const interval = state.mode==='debug'?CONFIG.TICKS.resDebug:CONFIG.TICKS.resNormal;
-  resTimer = setInterval(()=>{
-    const mult = 1 + 0.05*state.prestige;
-    // wood
-    if(state.camps>0){
-      if(state.wood < state.woodCap){ state.wood = Math.min(state.woodCap, state.wood + 1*mult); clearZzz('camp'); }
-      else setZzz('camp');
-    }
-    // stone
-    if(state.mines>0){
-      if(state.stone < state.stoneCap){ state.stone = Math.min(state.stoneCap, state.stone + 1*mult); clearZzz('mine'); }
-      else setZzz('mine');
-    }
-    setState({ wood: state.wood, stone: state.stone });
-  }, interval);
-  resTimer._dur = interval;
+  }, 1000);
 }

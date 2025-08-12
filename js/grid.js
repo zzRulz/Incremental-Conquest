@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { handleClickDown, handleClickUp } from './clicker.js';
 import { state } from './state.js';
 
 const board = document.getElementById('board');

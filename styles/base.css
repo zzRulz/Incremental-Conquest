@@ -23,3 +23,10 @@ header h1{font-size:18px; margin:0 10px 0 0}
 .small{font-size:12px; color:#8b95a8}
 .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
 .mode{display:flex; gap:8px; align-items:center}
+
+/* Clicker feedback */
+.float-num{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none; font-weight:800; animation:popUp .9s ease-out forwards; text-shadow:0 2px 8px rgba(0,0,0,.4) }
+.float-num.crit{ color:#ff6b6b; }
+@keyframes popUp{ 0%{opacity:0; transform:translate(-50%,-20%) scale(.8)} 20%{opacity:1} 100%{opacity:0; transform:translate(-50%,-80%) scale(1.1)} }
+.charge-ring{ position:absolute; inset:4px; border:2px dashed rgba(255,255,255,.3); border-radius:10px; animation:charge linear forwards; animation-duration: .5s }
+@keyframes charge{ from{opacity:.6; transform:scale(.95)} to{opacity:0; transform:scale(1.05)} }

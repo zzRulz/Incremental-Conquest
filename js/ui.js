@@ -2,6 +2,7 @@ import { state, setState, on } from './state.js';
 const goldEl = document.getElementById('gold');
 const woodEl = document.getElementById('wood');
 const stoneEl = document.getElementById('stone');
+const wheatEl = document.getElementById('wheat');
 const woodCapEl = document.getElementById('woodCap');
 const stoneCapEl = document.getElementById('stoneCap');
 const popEl = document.getElementById('pop');
@@ -32,6 +33,7 @@ export function refreshHeader(){
   goldEl.textContent = Math.round(state.gold*100)/100;
   woodEl.textContent = Math.floor(state.wood);
   stoneEl.textContent = Math.floor(state.stone);
+  wheatEl.textContent = Math.round(state.wheat*100)/100;
   woodCapEl.textContent = state.woodCap;
   stoneCapEl.textContent = state.stoneCap;
   popEl.textContent = state.pop;
