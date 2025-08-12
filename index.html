@@ -3,29 +3,37 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Conquête Clicker v2.2a</title>
+  <title>Conquête Clicker v2.3a</title>
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/board.css" />
   <link rel="stylesheet" href="styles/panels.css" />
 </head>
 <body>
-<header>
-  <h1>Conquête Clicker <span class="ver" id="version">v2.2a</span></h1>
-  <div class="stat">Or: <span id="gold">0</span></div>
-  <div class="stat">Bois: <span id="wood">0</span> / <span id="woodCap">10</span></div>
-  <div class="stat">Pierre: <span id="stone">0</span> / <span id="stoneCap">10</span></div>
-  <div class="stat">Blé: <span id="wheat">0</span></div>
-  <div class="stat">Science: <span id="science">0</span></div>
-  <div class="stat">Pop: <span id="pop">0</span></div>
-  <div class="mode">
-    <button id="menuBtn" class="btn">Menu</button>
-    <button id="adminBtn" class="btn">Admin</button>
-    <button id="zonesBtn" class="btn">Zones</button>
-    <button id="techBtn" class="btn">Tech</button>
-    <button id="artBtn" class="btn">Artéfacts</button>
-    <button id="achBtn" class="btn">Succès</button>
-    <button id="questBtn" class="btn">Quêtes</button>
-    <button id="prestigeBtn" class="btn danger">Prestige</button>
+<header class="header">
+  <div class="brand">
+    <div class="title">Conquête Clicker</div>
+    <div class="ver" id="version">v2.3a</div>
+  </div>
+  <div class="resources">
+    <div class="pill" title="Or"><span>🪙</span><b id="gold">0</b></div>
+    <div class="pill cap" title="Bois"><span>🪵</span><b id="wood">0</b><em>/</em><b id="woodCap">10</b><i class="capbar"><i id="woodBar"></i></i></div>
+    <div class="pill cap" title="Pierre"><span🪨</span><b id="stone">0</b><em>/</em><b id="stoneCap">10</b><i class="capbar"><i id="stoneBar"></i></i></div>
+    <div class="pill" title="Blé"><span>🌾</span><b id="wheat">0</b></div>
+    <div class="pill" title="Science"><span>🔬</span><b id="science">0</b></div>
+    <div class="pill" title="Population"><span>👥</span><b id="pop">0</b></div>
+  </div>
+  <div class="controls">
+    <div id="eventBanner" class="event">Aucun événement</div>
+    <div class="btns">
+      <button id="menuBtn" class="btn">Menu</button>
+      <button id="adminBtn" class="btn">Admin</button>
+      <button id="zonesBtn" class="btn">Zones</button>
+      <button id="techBtn" class="btn">Tech</button>
+      <button id="artBtn" class="btn">Artéfacts</button>
+      <button id="achBtn" class="btn">Succès</button>
+      <button id="questBtn" class="btn">Quêtes</button>
+      <button id="prestigeBtn" class="btn danger">Prestige</button>
+    </div>
   </div>
 </header>
 
@@ -35,7 +43,6 @@
   <section>
     <div class="topbar">
       <div>Zone: <b id="zoneR">2</b> • <span id="zoneName">Campement</span></div>
-      <div id="eventBanner" class="event-banner">Aucun événement</div>
     </div>
     <div id="board" class="board"></div>
   </section>
@@ -108,14 +115,14 @@
 
     <div class="build-card" id="libraryCard" style="display:none">
       <div class="build-head">📚 Bibliothèque (clic: science)</div>
-      <div class="build-desc">Coût: 50 or + 20 bois • 6s • Rendement: +0,1 science/clic</div>
+      <div class="build-desc">Coût: 50 or + 20 bois • 6s • +0,1 science/clic</div>
       <div class="build-bar"><div class="build-fill" id="libraryFill"></div></div>
       <div class="build-actions"><button class="btn" id="buildLibraryBtn">Construire</button><span class="small muted" id="libraryMsg">—</span></div>
     </div>
 
     <div class="build-card" id="foremanCard" style="display:none">
       <div class="build-head">🧱 Contremaître (auto-click)</div>
-      <div class="build-desc">Coût: 10 or, 10 bois, 3 pop • Niveau 1: 1 clic/s • Conso: 5 blé/min</div>
+      <div class="build-desc">Coût: 10 or, 10 bois, 3 pop • N1: 1 clic/s • 5 blé/min</div>
       <div class="build-actions">
         <button class="btn" id="buildForemanBtn">Construire</button>
         <button class="btn" id="toggleForemanBtn" style="display:none">Pause</button>
@@ -127,14 +134,11 @@
   </aside>
 </main>
 
-<!-- Menu/Admin modal -->
+<!-- Modals -->
 <div id="menuModal" class="modal">
   <div class="modal-backdrop" id="menuBackdrop"></div>
   <div class="modal-content">
-    <div class="modal-header">
-      <div class="title">⚙️ Menu</div>
-      <button id="menuClose" class="btn">✕</button>
-    </div>
+    <div class="modal-header"><div class="title">⚙️ Menu</div><button id="menuClose" class="btn">✕</button></div>
     <div class="modal-body">
       <div class="modal-section">
         <h3>Réinitialiser / Sauvegarde</h3>
@@ -161,7 +165,6 @@
   </div>
 </div>
 
-<!-- Modals: Succès / Quêtes / Prestige / Zones / Tech / Artéfacts -->
 <div id="achModal" class="modal">
   <div class="modal-backdrop" id="achBackdrop"></div>
   <div class="modal-content">
@@ -220,6 +223,6 @@
   </div>
 </div>
 
-<script type="module" src="js/main.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
