@@ -38,3 +38,7 @@
 /* Blink for prestige-ready */
 .blink{ animation:pulseBlink 1s infinite }
 @keyframes pulseBlink{ 0%,100%{ filter:brightness(1) } 50%{ filter:brightness(1.4) } }
+
+
+/* Disabled button state */
+.btn:disabled{ opacity:.5; cursor:not-allowed; filter:grayscale(.2) }

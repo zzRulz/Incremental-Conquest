@@ -5,6 +5,40 @@
 
 /* ===================== CONFIG ===================== */
 const CONFIG = {
+// === Prestige Skill Tree (tiered) ===
+const SKILL_TREE = [
+  { tier:1, reqTaken:0, nodes:[
+    { id:'foreman',  name:'Contremaître',   cost:1, effect:'foremanUnlock', desc:'Débloque le contremaître' },
+    { id:'stamina1', name:'Stamina I',      cost:1, effect:'staminaRegen+2', desc:'+2 regen stamina/s' },
+    { id:'crit1',    name:'Crit I',         cost:1, effect:'crit+0.03', desc:'+3% critique' },
+    { id:'castle1',  name:'Château I',      cost:1, effect:'castle+0.10', desc:'+10% or/clic' },
+    { id:'farm1',    name:'Champs I',       cost:1, effect:'field+0.10', desc:'+10% blé/clic' },
+    { id:'camp1',    name:'Camps I',        cost:1, effect:'camp+0.10', desc:'+10% bois/clic' },
+    { id:'mine1',    name:'Mines I',        cost:1, effect:'mine+0.10', desc:'+10% pierre/clic' },
+  ]},
+  { tier:2, reqTaken:3, nodes:[
+    { id:'global1',  name:'Global I',       cost:2, effect:'global+0.10', desc:'+10% tous clics' },
+    { id:'crit2',    name:'Crit II',        cost:2, effect:'crit+0.03', desc:'+3% critique' },
+    { id:'stamina2', name:'Stamina II',     cost:2, effect:'staminaRegen+3;staminaMax+20', desc:'+3 regen/s & +20 max' },
+    { id:'foreman2', name:'Auto I',         cost:2, effect:'foreSpeed+0.25', desc:'+25% vitesse auto' },
+    { id:'market1',  name:'Marché I',       cost:2, effect:'market+0.10', desc:'+10% prix de vente' },
+    { id:'cap1',     name:'Capacité I',     cost:2, effect:'cap+100', desc:'+100 cap bois/pierre' },
+    { id:'science1', name:'Science I',      cost:2, effect:'libMult+0.25', desc:'+25% science/clic' },
+  ]},
+  { tier:3, reqTaken:2, nodes:[
+    { id:'global2',  name:'Global II',      cost:3, effect:'global+0.15', desc:'+15% tous clics' },
+    { id:'hold2',    name:'Chargé II',      cost:3, effect:'hold->4.0', desc:'Clic chargé x4' },
+    { id:'double1',  name:'Double-clic',    cost:3, effect:'double+0.10', desc:'10% de répéter le gain' },
+    { id:'events1',  name:'Événements+',    cost:3, effect:'event+10', desc:'+10s durées d’événements' },
+    { id:'boss1',    name:'Butin+',         cost:3, effect:'artifact+0.10', desc:'+10% chance artéfact' },
+  ]},
+  { tier:4, reqTaken:2, nodes:[
+    { id:'pp1',      name:'PP Boost',       cost:4, effect:'pp+0.50', desc:'+50% points de prestige' },
+    { id:'foreman3', name:'Auto II',        cost:4, effect:'foreSpeed+0.35', desc:'+35% vitesse auto' },
+    { id:'stamina3', name:'Stamina III',    cost:4, effect:'staminaMax+30', desc:'+30 stamina max' },
+  ]},
+];
+
   VERSION: { major:2, minor:3, suffix:'d' },
   GRID: { cols: 15, rows: 11, startRadius: 2 },
   CLICK: {
@@ -85,6 +119,7 @@ const state = {
   globalMult: 1.0,
   event: { id:null, label:'Aucun événement', timeLeft:0, mult:{}, marketBonus:0 },
   tech: {}, techBonus:{}, artBonus:{}, artifacts: [],
+  prestigeTaken: {}, prestigeEffects: { critAdd:0, holdMult:null, staminaRegenAdd:0, staminaMaxAdd:0, foremanSpeed:1, marketAdd:0, libraryMult:1, doubleChance:0, eventExtra:0, ppMult:1, mult:{ castle:1, field:1, camp:1, mine:1, global:1 } },
   occupied: [], housePositions: [], fieldPositions: [], campPositions: [], minePositions: [],
   millPositions: [], warePositions: [], marketPositions: [], libraryPositions: [],
   treePositions: [], rockPositions: [],
@@ -192,7 +227,7 @@ function repaintFromState(){
   state.warePositions.forEach(i=>{ placeEmoji(i,'📦','warehouse'); });
   state.marketPositions.forEach(i=>{ placeEmoji(i,'🏪','market'); });
   state.libraryPositions.forEach(i=>{ placeEmoji(i,'📚','library', onClickUp); });
-  setDepletedClass(); reevaluateUnlocks(); updatePrestigeReady();
+  setDepletedClass(); reevaluateUnlocks(); updatePrestigeReady(); updateBuildButtons();
 }
 function setDepletedClass(){
   const nodes=board.children;
@@ -227,7 +262,8 @@ function getMult(kind){
   const zone = state.zoneBonus[kind] || 1;
   const tech = state.techBonus[kind] || 1;
   const art  = state.artBonus[kind] || 1;
-  return state.globalMult * ev * zone * tech * art;
+  const pre  = (state.prestigeEffects?.mult?.[kind]||1) * (state.prestigeEffects?.mult?.global||1);
+  return state.globalMult * ev * zone * tech * art * pre;
 }
 function staminaWidth(key){ return Math.max(0, Math.min(100, state.stamina[key]||0)); }
 function yieldPerClick(kind){
@@ -278,6 +314,80 @@ function upsert(kind, icon, title, usesStamina){
   bar.style.width = usesStamina ? staminaWidth(kind) + '%' : '100%';
 }
 function refreshAll(){
+function canBuild(kind){
+  const C = CONFIG.COSTS;
+  switch(kind){
+    case 'house': return { ok: state.gold>=C.HOUSE.gold, why: state.gold>=C.HOUSE.gold? '' : `Besoin ${C.HOUSE.gold} or` };
+    case 'field': return { ok: state.gold>=C.FIELD.gold && state.pop>=C.FIELD.pop, why: state.gold<C.FIELD.gold?`Besoin ${C.FIELD.gold} or`: (state.pop<C.FIELD.pop?`Besoin ${C.FIELD.pop} pop`: '') };
+    case 'camp': {
+      const okCost = state.gold>=C.CAMP.gold && state.pop>=C.CAMP.pop;
+      const slot = getFreeAdjacentTo(state.treePositions);
+      if(!okCost) return { ok:false, why: state.gold<C.CAMP.gold?`Besoin ${C.CAMP.gold} or`:`Besoin ${C.CAMP.pop} pop` };
+      if(slot===null) return { ok:false, why:'Aucun emplacement près d’un 🌳' };
+      return { ok:true, why:'' };
+    }
+    case 'mine': {
+      const okCost = state.gold>=C.MINE.gold && state.wood>=C.MINE.wood && state.pop>=C.MINE.pop;
+      const slot = getFreeAdjacentTo(state.rockPositions);
+      if(!okCost){
+        if(state.gold<C.MINE.gold) return { ok:false, why:`Besoin ${C.MINE.gold} or` };
+        if(state.wood<C.MINE.wood) return { ok:false, why:`Besoin ${C.MINE.wood} bois` };
+        if(state.pop<C.MINE.pop) return { ok:false, why:`Besoin ${C.MINE.pop} pop` };
+      }
+      if(slot===null) return { ok:false, why:'Aucun emplacement près d’une 🪨' };
+      return { ok:true, why:'' };
+    }
+    case 'mill': return { ok: state.gold>=C.MILL.gold && state.wood>=C.MILL.wood, why: state.gold<C.MILL.gold?`Besoin ${C.MILL.gold} or`:`Besoin ${C.MILL.wood} bois` };
+    case 'warehouse': return { ok: state.gold>=C.WARE.gold && state.wood>=C.WARE.wood, why: state.gold<C.WARE.gold?`Besoin ${C.WARE.gold} or`:`Besoin ${C.WARE.wood} bois` };
+    case 'market': return { ok: state.gold>=C.MARKET.gold, why: state.gold>=C.MARKET.gold? '' : `Besoin ${C.MARKET.gold} or` };
+    case 'library': return { ok: state.gold>=C.LIB.gold && state.wood>=C.LIB.wood, why: state.gold<C.LIB.gold?`Besoin ${C.LIB.gold} or`:`Besoin ${C.LIB.wood} bois` };
+    case 'foreman': return { ok: state.gold>=C.FOREMAN.gold && state.wood>=C.FOREMAN.wood && state.pop>=C.FOREMAN.pop, 
+      why: state.gold<C.FOREMAN.gold?`Besoin ${C.FOREMAN.gold} or`: (state.wood<C.FOREMAN.wood?`Besoin ${C.FOREMAN.wood} bois`:`Besoin ${C.FOREMAN.pop} pop`) };
+    default: return { ok:true, why:'' };
+  }
+}
+function updateBuildButtons(){
+  // Hide castle build once built
+  const castleBuild = document.getElementById('buildCastleBtn');
+  if(castleBuild){ castleBuild.style.display = state.castleBuilt ? 'none' : ''; }
+
+  const map=[
+    ['house','buildHouseBtn','houseMsg'],
+    ['field','buildFieldBtn','fieldMsg'],
+    ['camp','buildCampBtn','campMsg'],
+    ['mine','buildMineBtn','mineMsg'],
+    ['mill','buildMillBtn','millMsg'],
+    ['warehouse','buildWarehouseBtn','warehouseMsg'],
+    ['market','buildMarketBtn','marketMsg'],
+    ['library','buildLibraryBtn','libraryMsg'],
+    ['foreman','buildForemanBtn','foremanMsg'],
+  ];
+  map.forEach(([k,btnId,msgId])=>{
+    const btn=document.getElementById(btnId); const msg=document.getElementById(msgId);
+    const card=document.getElementById(k+'Card');
+    if(!btn||!card||card.style.display==='none') return;
+    const gate = (typeof isUnlocked==='function') ? isUnlocked(k) : true;
+    if(!gate){ btn.disabled=true; if(msg) msg.textContent='Condition de déblocage non remplie'; return; }
+    const {ok, why}=canBuild(k);
+    btn.disabled = !ok;
+    if(msg){ msg.textContent = ok? '—' : why; }
+    btn.title = ok? '' : why;
+  });
+
+  updatePrestigeHint();
+}
+function updatePrestigeHint(){
+  const msg = document.getElementById('castleMsg');
+  const goP = document.getElementById('goPrestigeBtn');
+  if(!msg || !state.castleBuilt) return;
+  const ready = state.castleLevel>=10;
+  if(!ready){
+    msg.textContent = '⭐ Prestige: Château niv. 10 requis';
+  } else {
+    msg.textContent = '—';
+  }
+}
+
 function updatePrestigeReady(){
   const btn = document.getElementById('goPrestigeBtn');
   if(!btn) return;
@@ -317,7 +427,7 @@ function reevaluateUnlocks(){
   upsert('field','🌾','Champs', true);
   upsert('camp','🪓','Camps', true);
   upsert('mine','⛏️','Mines', true);
-  setDepletedClass(); reevaluateUnlocks(); updatePrestigeReady();
+  setDepletedClass(); reevaluateUnlocks(); updatePrestigeReady(); updateBuildButtons();
 }
 
 /* ===================== CLICKER ===================== */
@@ -356,16 +466,17 @@ function onClickUp(e){
   if(kind==='house'||kind==='tree'||kind==='rock'||kind==='boss') return;
   const staminaKey=(kind==='field'||kind==='camp'||kind==='mine'||kind==='castle')?kind:(kind==='mill'?'mill':null);
   if(staminaKey && (state.stamina[staminaKey]||0) < CONFIG.CLICK.staminaCost){ showFloat(i,'épuisé'); return; }
-  let mult=1; if(held>=CONFIG.CLICK.holdMs) mult*=CONFIG.CLICK.holdMult;
-  const critChance = CONFIG.CLICK.critChance + (state.achievements['critPlus']?0.02:0);
+  let mult=1; const holdM = (state.prestigeEffects.holdMult||CONFIG.CLICK.holdMult);
+  if(held>=CONFIG.CLICK.holdMs) mult*=holdM;
+  const critChance = CONFIG.CLICK.critChance + (state.achievements['critPlus']?0.02:0) + (state.prestigeEffects.critAdd||0);
   const crit = Math.random()<critChance; if(crit) mult*=CONFIG.CLICK.critMult;
 
-  if(kind==='castle'){ const v=perClick('castle')*mult; setState({ gold: state.gold+v, totals:{...state.totals, gold: state.totals.gold+v}, clicks:{...state.clicks, castle: state.clicks.castle+1} }); showFloat(i,`+${v.toFixed(2)} or`, crit?'crit':''); spendStamina('castle'); }
-  else if(kind==='field'){ const v=perClick('field')*mult; setState({ wheat: state.wheat+v, totals:{...state.totals, wheat: state.totals.wheat+v}, clicks:{...state.clicks, field: state.clicks.field+1} }); showFloat(i,`+${v.toFixed(2)} blé`, crit?'crit':''); spendStamina('field'); }
-  else if(kind==='camp'){ const v=perClick('camp')*mult; setState({ wood: Math.min(state.woodCap, state.wood+v), totals:{...state.totals, wood: state.totals.wood+v}, clicks:{...state.clicks, camp: state.clicks.camp+1} }); showFloat(i,`+${v.toFixed(2)} bois`, crit?'crit':''); spendStamina('camp'); }
-  else if(kind==='mine'){ const v=perClick('mine')*mult; setState({ stone: Math.min(state.stoneCap, state.stone+v), totals:{...state.totals, stone: state.totals.stone+v}, clicks:{...state.clicks, mine: state.clicks.mine+1} }); showFloat(i,`+${v.toFixed(2)} pierre`, crit?'crit':''); spendStamina('mine'); }
+  if(kind==='castle'){ let v=perClick('castle')*mult; let add=v; if(Math.random()<(state.prestigeEffects.doubleChance||0)) add+=v; setState({ gold: state.gold+add, totals:{...state.totals, gold: state.totals.gold+add}, clicks:{...state.clicks, castle: state.clicks.castle+1} }); showFloat(i,`+${add.toFixed(2)} or`, crit?'crit':''); spendStamina('castle'); }
+  else if(kind==='field'){ let v=perClick('field')*mult; let add=v; if(Math.random()<(state.prestigeEffects.doubleChance||0)) add+=v; setState({ wheat: state.wheat+add, totals:{...state.totals, wheat: state.totals.wheat+add}, clicks:{...state.clicks, field: state.clicks.field+1} }); showFloat(i,`+${add.toFixed(2)} blé`, crit?'crit':''); spendStamina('field'); }
+  else if(kind==='camp'){ let v=perClick('camp')*mult; let add=v; if(Math.random()<(state.prestigeEffects.doubleChance||0)) add+=v; setState({ wood: Math.min(state.woodCap, state.wood+add), totals:{...state.totals, wood: state.totals.wood+add}, clicks:{...state.clicks, camp: state.clicks.camp+1} }); showFloat(i,`+${add.toFixed(2)} bois`, crit?'crit':''); spendStamina('camp'); }
+  else if(kind==='mine'){ let v=perClick('mine')*mult; let add=v; if(Math.random()<(state.prestigeEffects.doubleChance||0)) add+=v; setState({ stone: Math.min(state.stoneCap, state.stone+add), totals:{...state.totals, stone: state.totals.stone+add}, clicks:{...state.clicks, mine: state.clicks.mine+1} }); showFloat(i,`+${add.toFixed(2)} pierre`, crit?'crit':''); spendStamina('mine'); }
   else if(kind==='mill'){ if(state.wheat<1){ showFloat(i,'blé manquant'); return; } const g=0.8*mult; setState({ wheat: state.wheat-1, gold: state.gold+g }); showFloat(i,`-1 blé → +${g.toFixed(2)} or`); }
-  else if(kind==='library'){ let v=0.1*mult; if(state.artBonus['sciencePlus']) v+=1; setState({ science: state.science+v, totals:{...state.totals, science: state.totals.science+v}, clicks:{...state.clicks, library: state.clicks.library+1} }); showFloat(i,`+${v.toFixed(2)} sci`); }
+  else if(kind==='library'){ let v=0.1*mult*(state.prestigeEffects.libraryMult||1); if(state.artBonus['sciencePlus']) v+=1; setState({ science: state.science+v, totals:{...state.totals, science: state.totals.science+v}, clicks:{...state.clicks, library: state.clicks.library+1} }); showFloat(i,`+${v.toFixed(2)} sci`); }
   refreshAll();
 }
 
@@ -524,7 +635,7 @@ function buildLibrary(){
 
 /* Market */
 function updateMarketPrices(){
-  const bonus = 1 + (state.event.marketBonus||0) + (state.tech['log']?0.10:0);
+  const bonus = 1 + (state.event.marketBonus||0) + (state.tech['log']?0.10:0) + (state.prestigeEffects.marketAdd||0);
   text('priceWheat', `${Math.round(state.market.wheat*10*bonus)} or`);
   text('priceWood', `${Math.round(state.market.wood*10*bonus)} or`);
   text('priceStone', `${Math.round(state.market.stone*10*bonus)} or`);
@@ -584,7 +695,7 @@ function startEvents(){
   }, 15000);
 }
 function startEvent(ev){
-  state.event.id = ev.id; state.event.label = ev.label; state.event.timeLeft=ev.dur; state.event.mult=ev.mult||{}; state.event.marketBonus=ev.market||0;
+  state.event.id = ev.id; state.event.label = ev.label; state.event.timeLeft=ev.dur + (state.prestigeEffects.eventExtra||0); state.event.mult=ev.mult||{}; state.event.marketBonus=ev.market||0;
   banner.textContent = `${ev.label} (${state.event.timeLeft}s)`;
 }
 function tickEvent(){
@@ -704,14 +815,79 @@ function initPrestige(){
   byId('prestigeBackdrop').addEventListener('click', ()=> closeModal('prestigeModal'));
   byId('prestigeClose').addEventListener('click', ()=> closeModal('prestigeModal'));
   byId('doPrestige').addEventListener('click', doPrestige);
-  byId('tree').addEventListener('click', (e)=>{
-    const node=e.target.closest('.node'); if(!node) return; spendPoint(node.dataset.id, node);
-  });
-  updatePP();
+  updatePP(); renderSkillTree();
 }
-function updatePP(){ text('pp', state.prestigePoints); }
+function updatePP(){ text('pp', state.prestigePoints); if(ppHdr) ppHdr.textContent=state.prestigePoints; if(prestigeHdr) prestigeHdr.textContent=state.prestige; }
+
+function renderSkillTree(){
+  const root = byId('skillTree'); if(!root) return; root.innerHTML='';
+  SKILL_TREE.forEach(t=>{
+    const tierBox=document.createElement('div'); tierBox.className='skill-tier';
+    const lbl=document.createElement('div'); lbl.className='label';
+    const takenInTier = Object.keys(state.prestigeTaken).filter(id=>id.startsWith('t'+t.tier+':')).length;
+    lbl.textContent = `Palier ${t.tier} — besoin d'en prendre ${t.reqTaken} au palier ${t.tier-1}`;
+    tierBox.appendChild(lbl);
+    t.nodes.forEach(n=>{
+      const id=`t${t.tier}:${n.id}`; const taken=!!state.prestigeTaken[id];
+      const el=document.createElement('div'); el.className='skill-node';
+      el.classList.toggle('taken', taken);
+      const canOpen = isTierAvailable(t.tier) && !taken && state.prestigePoints>=n.cost;
+      el.classList.toggle('locked', !canOpen);
+      el.dataset.id=id; el.dataset.tier=t.tier; el.dataset.cost=n.cost;
+      el.innerHTML = `<div class='name'>${n.name}</div><div class='cost'>${n.cost} PP</div><div class='req small muted'>${n.desc||''}</div>`;
+      el.addEventListener('click', ()=>{ if(!isTierAvailable(t.tier) || taken) return; if(state.prestigePoints<n.cost) return; takeSkill(t, n); });
+      tierBox.appendChild(el);
+    });
+    root.appendChild(tierBox);
+  });
+}
+function isTierAvailable(tier){
+  if(tier===1) return true;
+  const prev = SKILL_TREE.find(x=>x.tier===tier-1);
+  const takenPrev = Object.keys(state.prestigeTaken).filter(id=>id.startsWith('t'+(tier-1)+':')).length;
+  return takenPrev >= (prev? prev.reqTaken : 0);
+}
+function takeSkill(t, n){
+  const id=`t${t.tier}:${n.id}`; if(state.prestigeTaken[id]) return;
+  if(!isTierAvailable(t.tier)) return; if(state.prestigePoints<n.cost) return;
+  state.prestigePoints -= n.cost; state.prestigeTaken[id]=true; applySkillEffect(n.effect);
+  updatePP(); renderSkillTree(); refreshAll(); updateBuildButtons(); save();
+}
+
+
+function applySkillEffect(effectSpec){
+  if(!effectSpec) return;
+  const effs = effectSpec.split(';');
+  effs.forEach(e=>{
+    if(e==='foremanUnlock'){ state.achievements['foremanUnlock']=true; updateForemanUI(); return; }
+    let [k,v] = e.split(/(\+|->)/); // e.g., 'crit+0.03' or 'hold->4.0'
+    if(!v){ return; }
+    const op = e.includes('->') ? '->' : '+';
+    const num = parseFloat(e.split(op)[1]);
+    switch(true){
+      case k==='crit': state.prestigeEffects.critAdd = (state.prestigeEffects.critAdd||0) + num; break;
+      case k==='hold' && op==='->': state.prestigeEffects.holdMult = num; break;
+      case k==='staminaRegen': state.prestigeEffects.staminaRegenAdd = (state.prestigeEffects.staminaRegenAdd||0) + num; break;
+      case k==='staminaMax': state.prestigeEffects.staminaMaxAdd = (state.prestigeEffects.staminaMaxAdd||0) + num; break;
+      case k==='foreSpeed': state.prestigeEffects.foremanSpeed = (state.prestigeEffects.foremanSpeed||1) * (1+num); break; // num is 0.25 => *1.25
+      case k==='market': state.prestigeEffects.marketAdd = (state.prestigeEffects.marketAdd||0) + num; break;
+      case k==='cap': state.woodCap += num; state.stoneCap += num; break;
+      case k==='libMult': state.prestigeEffects.libraryMult = (state.prestigeEffects.libraryMult||1) * (1+num); break;
+      case k==='double': state.prestigeEffects.doubleChance = (state.prestigeEffects.doubleChance||0) + num; break;
+      case k==='event': state.prestigeEffects.eventExtra = (state.prestigeEffects.eventExtra||0) + num; break;
+      case k==='pp': state.prestigeEffects.ppMult = (state.prestigeEffects.ppMult||1) * (1+num); break;
+      case k==='global': state.prestigeEffects.mult.global = (state.prestigeEffects.mult.global||1) * (1+num); break;
+      case k==='castle': state.prestigeEffects.mult.castle = (state.prestigeEffects.mult.castle||1) * (1+num); break;
+      case k==='field': state.prestigeEffects.mult.field = (state.prestigeEffects.mult.field||1) * (1+num); break;
+      case k==='camp': state.prestigeEffects.mult.camp = (state.prestigeEffects.mult.camp||1) * (1+num); break;
+      case k==='mine': state.prestigeEffects.mult.mine = (state.prestigeEffects.mult.mine||1) * (1+num); break;
+      case k==='artifact': state.prestigeEffects.artifactBonus = (state.prestigeEffects.artifactBonus||0) + num; break;
+    }
+  });
+}
+
 function resetForPrestige(){
-  const keep={ version: state.version, prestige: state.prestige+1, prestigePoints: state.prestigePoints, achievements: state.achievements, artifacts: state.artifacts, artBonus: state.artBonus };
+  const keep={ version: state.version, prestige: state.prestige+1, prestigePoints: state.prestigePoints, achievements: state.achievements, artifacts: state.artifacts, artBonus: state.artBonus, prestigeTaken: state.prestigeTaken, prestigeEffects: state.prestigeEffects };
   const fresh={
     gold:0, wood:0, stone:0, wheat:0, science:0, pop:0,
     woodCap: CONFIG.STORAGE.woodCap, stoneCap: CONFIG.STORAGE.stoneCap,
@@ -738,7 +914,8 @@ function resetForPrestige(){
 }
 function doPrestige(){
   if(state.castleLevel < 10){ alert('Prestige verrouillé: Château niveau 10 requis.'); return; }
-  const pointsGained = Math.floor(Math.max(0, state.gold)/100);
+  let pointsGained = Math.floor(Math.max(0, state.gold)/100);
+  pointsGained = Math.floor(pointsGained * (state.prestigeEffects.ppMult||1));
   state.prestigePoints += pointsGained;
   resetForPrestige();
   closeModal('prestigeModal');
@@ -855,6 +1032,7 @@ function addResourceHandlers(){
 function refreshHeader(){
   if(prestigeHdr) prestigeHdr.textContent = state.prestige;
   if(ppHdr) ppHdr.textContent = state.prestigePoints;
+  updateBuildButtons();
   goldEl.textContent=(Math.round(state.gold*100)/100).toString();
   woodEl.textContent=Math.floor(state.wood);
   stoneEl.textContent=Math.floor(state.stone);
@@ -871,7 +1049,7 @@ function refreshHeader(){
 function startTimers(){
   setInterval(save, 5000);
   setInterval(()=>{ // stamina regen
-    const max=CONFIG.CLICK.staminaMax, regen=CONFIG.CLICK.staminaRegenPerSec;
+    const max=CONFIG.CLICK.staminaMax + (state.prestigeEffects.staminaMaxAdd||0), regen=CONFIG.CLICK.staminaRegenPerSec + (state.prestigeEffects.staminaRegenAdd||0);
     state.stamina.castle=Math.min(max, (state.stamina.castle||0)+regen);
     state.stamina.field =Math.min(max, (state.stamina.field ||0)+regen);
     state.stamina.camp  =Math.min(max, (state.stamina.camp  ||0)+regen);
@@ -886,7 +1064,7 @@ function startTimers(){
   let acc=0;
   setInterval(()=>{
     if(!state.foreman.built || !state.foreman.on) return;
-    const cps=state.foreman.clicksPerSec; acc += 0.1*cps;
+    const cps=state.foreman.clicksPerSec * (state.prestigeEffects.foremanSpeed||1); acc += 0.1*cps;
     const consumePerTick=(state.foreman.wheatPerMin/60)*0.1;
     if(state.wheat < consumePerTick) return;
     state.wheat -= consumePerTick; refreshHeader();

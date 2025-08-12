@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Conquête Clicker v2.3d</title>
+  <title>Conquête Clicker v2.3f</title>
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/board.css" />
   <link rel="stylesheet" href="styles/panels.css" />
@@ -12,7 +12,7 @@
 <header class="header">
   <div class="brand">
     <div class="title">Conquête Clicker</div>
-    <div class="ver" id="version">v2.3d</div>
+    <div class="ver" id="version">v2.3f</div>
   </div>
   <div class="resources">
     <div class="pill" title="Or"><span>🪙</span><b id="gold">0</b></div>
@@ -187,8 +187,9 @@
     <div class="modal-header"><div class="title">⭐ Prestige</div><button id="prestigeClose" class="btn">✕</button></div>
     <div class="modal-body">
       <div class="row"><div>Points: <b id="pp">0</b></div><button id="doPrestige" class="btn danger">Faire Prestige</button></div>
-      <div id="tree" class="tree">
-        <div class="node" data-id="foremanUnlock">🤖 Contremaître (1 PP)</div>
+      <div id="skillTree" class="skill-tree">
+        <!-- tiers will be rendered dynamically -->
+      </div>
         <div class="node" data-id="foremanSpeed">⏩ Auto +25% (1 PP)</div>
         <div class="node" data-id="stamina">💪 Stamina++ (1 PP)</div>
         <div class="node" data-id="crit">🎯 Crit++ (1 PP)</div>
