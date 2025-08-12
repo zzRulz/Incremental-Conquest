@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Châteaux & Champs – Phase 3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conquête Clicker</title>
   <link rel="icon" href="assets/favicon.svg" />
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/theme-dark.css" />
@@ -12,37 +12,35 @@
 </head>
 <body>
 <header>
-  <h1>Châteaux & Champs</h1>
+  <h1>Conquête Clicker</h1>
   <div class="stat">Or: <span id="gold">0</span></div>
   <div class="stat">Bois: <span id="wood">0</span> / <span id="woodCap">10</span></div>
-  <div class="stat">Blé: <span id="wheat">0</span></div>
   <div class="stat">Pierre: <span id="stone">0</span> / <span id="stoneCap">10</span></div>
+  <div class="stat">Blé: <span id="wheat">0</span></div>
   <div class="stat">Pop: <span id="pop">0</span></div>
   <div class="stat small">💰 /clic: <span id="income" class="neu">0</span></div>
-  <div class="stat small">⭐ Prestige: <span id="prestige">0</span></div>
   <div class="mode">
     <button id="modeBtn" class="btn">Mode: Debug (2s)</button>
     <button id="soundBtn" class="btn">🔊 Son: ON</button>
-    <button id="prestigeBtn" class="btn danger" title="Château niv.10 requis" disabled>Prestige</button>
+    <button id="prestigeBtn" class="btn danger" disabled>Prestige</button>
   </div>
 </header>
 
 <main class="layout">
   <aside id="leftPanel"></aside>
 
-  <section class="board-wrap">
+  <section>
     <div class="topbar">
-      <div class="muted">Zone circulaire</div>
-      <div class="muted">Grille: <span id="gridSizeLabel">15×11</span> • Rayon: <span id="zoneR">2</span></div>
+      <div>Zone: <b id="zoneR">2</b></div>
     </div>
-    <div id="board" class="board" role="grid" aria-label="Plateau"></div>
+    <div id="board" class="board"></div>
   </section>
 
   <aside id="rightPanel">
     <!-- Château -->
     <div class="build-card" id="castleCard">
       <div class="build-head" id="castleHead">🏰 Château (Niv. 1)</div>
-      <div class="build-desc" id="castleDesc">Construction: 10s • Prod: <b>+1 or/tick</b> • Limite maisons: <b id="houseLimitLabel">1</b></div>
+      <div class="build-desc" id="castleDesc">Construction: 6s • Débloque les maisons • Rendement de base: <b>+0,1 or / clic</b></div>
       <div class="build-bar"><div class="build-fill" id="castleFill"></div></div>
       <div class="build-actions" id="castleActions">
         <button class="btn primary" id="buildCastleBtn">Construire</button>
@@ -53,7 +51,7 @@
     <!-- Maison -->
     <div class="build-card" id="houseCard" style="display:none">
       <div class="build-head">🏠 Maison</div>
-      <div class="build-desc">5 or • 5s • +2 pop • Entretien <b>−0,5 or/tick</b></div>
+      <div class="build-desc">5 or • 5s • <b>+1 pop</b></div>
       <div class="build-bar"><div class="build-fill" id="houseFill"></div></div>
       <div class="build-actions">
         <button class="btn" id="buildHouseBtn">Construire</button>
@@ -64,7 +62,7 @@
     <!-- Champ -->
     <div class="build-card" id="fieldCard" style="display:none">
       <div class="build-head">🌾 Champ</div>
-      <div class="build-desc">3 or • 4s • Prod <b>+0,5 or/tick</b></div>
+      <div class="build-desc">Coût: <b>5 or + 1 pop</b> • 4s • Rendement: <b>+0,1 blé / clic</b></div>
       <div class="build-bar"><div class="build-fill" id="fieldFill"></div></div>
       <div class="build-actions">
         <button class="btn" id="buildFieldBtn">Construire</button>
@@ -75,7 +73,7 @@
     <!-- Camp de bûcheron -->
     <div class="build-card" id="campCard" style="display:none">
       <div class="build-head">🪓 Camp de bûcheron</div>
-      <div class="build-desc">8 or • 6s • −2 pop • <b>+1 bois / 30s</b> (si 🌳 dispo)</div>
+      <div class="build-desc">Coût: <b>8 or + 1 pop</b> • 6s • Rendement: <b>+0,1 bois / clic</b> • Adjacent à un 🌳</div>
       <div class="build-bar"><div class="build-fill" id="campFill"></div></div>
       <div class="build-actions">
         <button class="btn" id="buildCampBtn">Construire</button>
@@ -86,7 +84,7 @@
     <!-- Mine de pierre -->
     <div class="build-card" id="mineCard" style="display:none">
       <div class="build-head">⛏️ Mine de pierre</div>
-      <div class="build-desc">10 or + 5 bois • 8s • −2 pop • <b>+1 pierre / 30s</b> (si 🪨 dispo, prestige ≥3)</div>
+      <div class="build-desc">Coût: <b>8 or + 5 bois + 1 pop</b> • 8s • Rendement: <b>+0,1 pierre / clic</b> • Adjacent à une 🪨</div>
       <div class="build-bar"><div class="build-fill" id="mineFill"></div></div>
       <div class="build-actions">
         <button class="btn" id="buildMineBtn">Construire</button>
@@ -94,21 +92,10 @@
       </div>
     </div>
 
-    <!-- Entrepôt -->
-    <div class="build-card" id="warehouseCard" style="display:none">
-      <div class="build-head">🏚️ Entrepôt</div>
-      <div class="build-desc">10 bois + 10 pierre • 8s • <b>+15 capacité</b> (Prestige ≥3)</div>
-      <div class="build-bar"><div class="build-fill" id="warehouseFill"></div></div>
-      <div class="build-actions">
-        <button class="btn" id="buildWarehouseBtn">Construire</button>
-        <span class="small muted" id="warehouseMsg">—</span>
-      </div>
-    </div>
-  
     <!-- Contremaître -->
-    <div class="build-card" id="foremanCard" style="display:block">
+    <div class="build-card" id="foremanCard">
       <div class="build-head">🧱 Contremaître</div>
-      <div class="build-desc">Coût: 10 or, 10 bois, 3 pop • Clique 1×/s sur tous les bâtiments producteurs • Consomme <b>5 blé/min</b> • (On/Off)</div>
+      <div class="build-desc">Coût: <b>10 or, 10 bois, 3 pop</b> • Clique 1×/s sur producteurs (or/bois/blé/pierre) • <b>Consomme 5 blé/min</b></div>
       <div class="build-actions">
         <button class="btn" id="buildForemanBtn">Construire</button>
         <button class="btn" id="toggleForemanBtn" style="display:none">Pause</button>
