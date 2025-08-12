@@ -39,7 +39,7 @@ SKILL_TREE:  [
   ]},
 ],
 
-  VERSION: { major:2, minor:3, suffix:'d' },
+  VERSION: { major:2, minor:3, suffix:'g' },
   GRID: { cols: 15, rows: 11, startRadius: 2 },
   CLICK: {
     base: { castle: 0.1, field: 0.1, camp: 0.1, mine: 0.1, mill: 0, library: 0.1 },
@@ -510,6 +510,10 @@ function buildCastle(){
     const ci=getCenterIndex();
     placeEmoji(ci,'🏰','castle', onClickUp); board.children[ci].addEventListener('mousedown', onClickDown);
     setState({ castleBuilt:true });
+    // Bonus départ 2.3g
+    state.gold = (state.gold||0) + 10;
+    text('castleMsg','Château construit ! +10 or de fondation');
+
     unlockAfterCastle();
     refreshAll(); placeNaturalResources(); updatePrestigeReady();
   }, CONFIG.COSTS.CASTLE.timeMs);
@@ -1095,6 +1099,8 @@ function disableBtn(id,b){ const el=byId(id); if(el) el.disabled=b; }
 /* ===================== MENU/INIT ===================== */
 function start(){
   load();
+
+  try{ if(!localStorage.getItem(CONFIG.SAVE_KEY)){ state.gold = Math.max(state.gold||0, 10); } }catch(e){}
   initGrid();
   initUI();
   setupBuildButtons();
